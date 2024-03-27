@@ -8,8 +8,8 @@ graphics.off()
 
 ## global variables ----
 
-test_suite <- "test_suite_1"
-TEST_SUITE <- "Test Suite 1"
+test_suite <- "fPCA"
+TEST_SUITE <- "fPCA"
 
 
 ## prerequisite ----
@@ -39,8 +39,8 @@ source("src/utils/plots.R")
 
 ## paths ----
 path_options <- paste("queue/", sep = "")
-path_results <- paste("results/", test_suite, sep = "")
-path_images <- paste("images/", test_suite, sep = "")
+path_results <- paste("results/", test_suite, "/",sep = "")
+path_images <- paste("images/", test_suite, "/", sep = "")
 file_log <- "log.txt"
 
 
@@ -50,8 +50,8 @@ file_log <- "log.txt"
 colors <- c(brewer.pal(3, "Greens")[2], brewer.pal(3, "Blues")[2], brewer.pal(3, "Purples")[2])
 
 ## names and labels
-names_models <- c("model1", "model2", "model2")
-lables_models <- c("Model 1", "Model 2", "Model 3")
+names_models <- c("MV_PCA", "fPCA_off", "fPCA_gcv")
+lables_models <- c("MV-PCA", "fPCA (no calibration)", "fPCA (gcv calibration)")
 
 
 ## load data ----
@@ -78,8 +78,8 @@ file_test_vect <- sort(list.files(path_options))
 pdf(paste(path_images, "time_complexity.pdf", sep = ""))
 
 ## room for solutions
-columns_names <- c("Group", "n_locs", names_models)
-empty_df <- data.frame(matrix(NaN, nrow = 0, ncol = 5))
+columns_names <- c("Group", "n_nodes", "n_locs", "n_stat_units",  names_models)
+empty_df <- data.frame(matrix(NaN, nrow = 0, ncol = length(columns_names)))
 colnames(empty_df) <- columns_names
 times <- empty_df
 
@@ -88,7 +88,9 @@ for (file_test in file_test_vect) {
   file_json <- paste(path_options, file_test, sep = "")
   parsed_json <- fromJSON(file_json)
   name_test <- parsed_json$test$name_test
+  n_nodes <- parsed_json$dimensions$n_nodes
   n_locs <- parsed_json$dimensions$n_locs
+  n_stat_units <- parsed_json$dimensions$n_stat_units
   n_reps <- parsed_json$dimensions$n_reps
 
   cat(paste("\nTest ", name_test, ":\n", sep = ""))
@@ -110,13 +112,9 @@ for (file_test in file_test_vect) {
 
     ## times
     times <- add_results(
-      times,
-      list(
-        n_locs = n_locs,
-        fPCA_off = format_time(results_evaluation$fPCA_off$execution_time),
-        fPCA_gcv = format_time(results_evaluation$fPCA_gcv$execution_time),
-        SpatialPCA = format_time(results_evaluation$SpatialPCA$execution_time)
-      ),
+      times, 
+      c(list(n_nodes = n_nodes, n_locs = n_locs, n_stat_units = n_stat_units), 
+        extract_new_results(results_evaluation, names_models, "execution_time")),
       columns_names
     )
 
@@ -128,26 +126,24 @@ for (file_test in file_test_vect) {
 }
 
 ## plots
-times <- times[, c("n_locs", "fPCA_off", "fPCA_gcv", "SpatialPCA")]
-colnames(times) <- c("Group", "fPCA_off", "fPCA_gcv", "SpatialPCA")
+times <- times[, c("n_locs", names_models)]
+colnames(times) <- c("Group", names_models)
 boxplot <- plot.grouped_boxplots(
   times,
   values_name = "Time [seconds]",
   group_name = "S",
   subgroup_name = "Approches",
-  subgroup_labels = c("fPCA (no calibration)", "fPCA (gcv)", "SpatialPCA"),
-  subgroup_colors = colors,
-  LEGEND = FALSE
+  subgroup_labels = lables_models,
+  subgroup_colors = colors
 ) + standard_plot_settings() + ggtitle("Execution times")
 plot <- plot.multiple_lines(
-  times %>% group_by(Group) %>% summarize(fPCA_off = mean(fPCA_off), fPCA_gcv = mean(fPCA_gcv), SpatialPCA = mean(SpatialPCA)),
+  aggregate(. ~ Group, data = times, FUN = mean),
   values_name = "Time [seconds]",
   x_name = "S",
   subgroup_name = "Approches",
-  subgroup_labels = c("fPCA (no calibration)", "fPCA (gcv)", "SpatialPCA"),
+  subgroup_labels = lables_models,
   subgroup_colors = colors,
-  LOGLOG = TRUE,
-  LEGEND = FALSE
+  LOGLOG = TRUE
 ) + standard_plot_settings() + ggtitle("Execution times - loglog scale")
 print(boxplot)
 print(plot)

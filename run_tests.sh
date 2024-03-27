@@ -30,4 +30,4 @@ done
 
 ## Run time complexity analysis
 cd ../
-RScript tests/$1/time_complexity.R $2
+RScript tests/$1/post_processing.R $2

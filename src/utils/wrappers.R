@@ -73,29 +73,32 @@ SpatialPCA_wrapped <- function(data, n_comp = 3) {
 MV_PCA_wrapped <- function(data, center = TRUE, n_comp = 3) {
   ## data
   X <- data$X
-
+  
   ## centering
-  X_mean_hat_locs <- colMeans(X)
-  X <- scale(X, center = center, scale = FALSE)
+  X_mean_locs <- rep(0, ncol(X))
+  if(center) {
+    X_mean_locs <- colMeans(X)
+    X <- scale(X, center = TRUE, scale = FALSE)
+  }
 
   # MV-PCA
-  model_MV_PCA <- prcomp(X, center = center, rank. = n_comp)
+  model_MV_PCA <- prcomp(X, center = FALSE, rank. = n_comp)
 
   ## results
-  X_mean_hat_locs <- model_MV_PCA$center
   loadings_locs <- model_MV_PCA$rotation
   scores <- model_MV_PCA$x
-
+  X_hat_locs <- scores %*% t(loadings_locs) + rep(1, nrow(scores)) %*% t(X_mean_locs)
+  
   return(list(
     model = model_MV_PCA,
     results = list(
       loadings = NULL,
       loadings_locs = loadings_locs,
       scores = scores,
-      X_mean_hat = NULL,
-      X_mean_hat_locs = X_mean_hat_locs,
+      X_mean = NULL,
+      X_mean_locs = X_mean_locs,
       X_hat = NULL,
-      X_hat_locs = scores %*% t(loadings_locs) + seq(1, nrow(scores)) %*% t(X_mean_hat_locs)
+      X_hat_locs = X_hat_locs
     )
   ))
 }

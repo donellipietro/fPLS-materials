@@ -10,9 +10,9 @@ generate_options <- function(name_main_test, path_queue) {
       # - locations != nodes
 
       ## options grid
-      n_nodes_vect <- c(400) # , 600, 800)
-      n_locs_vect <- c(200) # , 300, 400)
-      n_stat_units_vect <- c(50) # , 100, 200)
+      n_nodes_vect <- c(400, 600)
+      n_locs_vect <- c(400, 600)
+      n_stat_units_vect <- c(50, 100)
 
       ## fixed options
       name_mesh <- "unit_square"

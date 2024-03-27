@@ -104,10 +104,15 @@ plot.points <- function(locations, group = NULL, boundary = NULL,
 
 ## plot field: points version
 
-plot.field_points <- function(locations, data, boundary = NULL,
+plot.field_points <- function(locations, f, boundary = NULL,
                               size = 1, limits = NULL, colormap = "D",
                               discrete = FALSE, LEGEND = FALSE) {
-  data <- data.frame(locations, value = data)
+  
+  if(is.null(f)) {
+    return(ggplot() + theme_void())
+  }
+  
+  data <- data.frame(locations, value = f)
   colnames(data) <- c("x", "y", "value")
   
   plot <- ggplot() +
@@ -151,6 +156,11 @@ plot.field_points <- function(locations, data, boundary = NULL,
 plot.field_tile <- function(nodes, f, boundary = NULL,
                             limits = NULL, breaks = NULL, colormap = "D",
                             discrete = FALSE, ISOLINES = FALSE, LEGEND = FALSE) {
+  
+  if(is.null(f)) {
+    return(ggplot() + theme_void())
+  }
+  
   data <- data.frame(nodes, value = f)
   colnames(data) <- c("x", "y", "value")
   
@@ -263,7 +273,7 @@ plot.grouped_boxplots <- function(data,
   
   ## grouped box-plot
   plot <- ggplot(data = data, aes(x = Group, y = Score, fill = SubGroup)) +
-    geom_boxplot() +
+    geom_boxplot(na.rm = TRUE) +
     labs(x = group_name, y = values_name) +
     scale_fill_manual(
       name = subgroup_name,

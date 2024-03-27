@@ -22,10 +22,11 @@ install: install_fdaPDE2 install_femR
 	@echo "Installation completed."
 
 # Test targets
-test_name_test_suite:
-	@echo "Running name_test_suite tests..."
+test_fPCA:
+	@echo "Running fPCA tests..."
+	@./run_tests.sh fPCA test1
 
-test: build clean test_name_test_suite
+test: build clean test_fPCA
 	@echo "All tests completed."
 
 # Build target

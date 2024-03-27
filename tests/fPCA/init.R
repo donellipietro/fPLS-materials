@@ -6,7 +6,7 @@ rm(list = ls())
 
 ## sources ----
 source("src/utils/directories.R")
-source(paste("tests/test_suite_1/utils/generate_options.R", sep = ""))
+source(paste("tests/fPCA/utils/generate_options.R", sep = ""))
 
 
 ## libraries ----
