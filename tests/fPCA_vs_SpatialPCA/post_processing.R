@@ -8,8 +8,8 @@ graphics.off()
 
 ## global variables ----
 
-test_suite <- "fPCA"
-TEST_SUITE <- "fPCA"
+test_suite <- "fPCA_vs_SpatialPCA"
+TEST_SUITE <- "fPCA vs SpatialPCA"
 
 
 ## prerequisite ----
@@ -49,20 +49,19 @@ file_log <- "log.txt"
 
 ## options ----
 
-## colors
-colors <- c(brewer.pal(3, "Purples")[3], brewer.pal(3, "Blues")[2:3], brewer.pal(3, "Greens")[3])
+## colors used in the plots
+colors <- c(brewer.pal(3, "Purples")[3], brewer.pal(3, "Blues")[2:3], brewer.pal(3, "Greens")[3], brewer.pal(3, "Oranges")[3])
 
 ## names and labels
-names_models <- c("MV_PCA", "fPCA_off", "fPCA_gcv", "fPCA_mon_hyb")
-lables_models <- c("MV-PCA", "fPCA seq. (no cal.)", "fPCA seq. (gcv cal.)", "fPCA mon. (hybrid cal.)")
-
+names_models <- c("MV_PCA", "fPCA_off", "fPCA_gcv", "fPCA_mon_hyb", "SpatialPCA")
+lables_models <- c("MV-PCA", "fPCA seq. (no cal.)", "fPCA seq. (gcv cal.)", "fPCA mon. (hybrid cal.)", "SpatialPCA")
 
 ## load data ----
 
 ## check arguments passed by terminal
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
-  args[1] <- "test2"
+  args[1] <- "test1"
 }
 
 ## main test name
@@ -70,7 +69,6 @@ name_main_test <- args[1]
 cat(paste("\nTest selected:", name_main_test, "\n"))
 path_results <- paste(path_results, name_main_test, "/", sep = "")
 path_images <- paste(path_images, name_main_test, "/", sep = "")
-mkdir(path_images)
 
 ## generate options
 generate_options(name_main_test, path_options)
@@ -170,7 +168,7 @@ name_group_vect <- c("K", "N", "S")
 ### time complexity ----
 
 ## open a pdf where to save the plots
-pdf(paste(path_images, "time_complexity.pdf", sep = ""), width = 15, height = 15)
+pdf(paste(path_images, "time_complexity.pdf", sep = ""), width = 28, height = 6)
 
 ## data and titles
 data_plot <- times
@@ -187,7 +185,7 @@ for(name_ao in name_aggregation_option_vect) {
 }
 
 
-for(i in 1:length(name_aggregation_option_vect)) {
+for(i in 2:length(name_aggregation_option_vect)) {
   
   boxplot_list <- list()
   plot_list <- list()
@@ -295,7 +293,7 @@ dev.off()
 
 
 ## open a pdf where to save the plots
-pdf(paste(path_images, "overall_quantitative_results.pdf", sep = ""), width = 15, height = 15)
+pdf(paste(path_images, "overall_quantitative_results.pdf", sep = ""), width = 28, height = 6)
 
 ## reconstruction RMSE at locations
 data_plot <- rmses[["reconstruction_locs"]]

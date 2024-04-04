@@ -1,6 +1,6 @@
-# % %%%%%%%%%%%%%% %
-# % % Test: fPCA % %
-# % %%%%%%%%%%%%%% %
+# % %%%%%%%%%%%%%%%%%%%%%%%%%%%% %
+# % % Test: fPCA vs SpatialPCA % %
+# % %%%%%%%%%%%%%%%%%%%%%%%%%%%% %
 
 rm(list = ls())
 graphics.off()
@@ -9,8 +9,8 @@ graphics.off()
 
 ## global variables ----
 
-test_suite <- "fPCA"
-TEST_SUITE <- "fPCA"
+test_suite <- "fPCA_vs_SpatialPCA"
+TEST_SUITE <- "fPCA vs SpatialPCA"
 
 
 # libraries ----
@@ -43,6 +43,8 @@ suppressMessages(library(sf))
 suppressMessages(library(sp))
 suppressMessages(library(raster))
 
+## competitor
+suppressMessages(library(SpatialPCA))
 
 # sources ----
 
@@ -99,11 +101,11 @@ lambda_grid <- fdaPDE2::hyperparameters(10^seq(-6, 1, by = 0.1))
 ## visualization options ----
 
 ## colors used in the plots
-colors <- c(brewer.pal(3, "Purples")[3], brewer.pal(3, "Blues")[2:3], brewer.pal(3, "Greens")[3])
+colors <- c(brewer.pal(3, "Purples")[3], brewer.pal(3, "Blues")[2:3], brewer.pal(3, "Greens")[3], brewer.pal(3, "Oranges")[3])
 
 ## names and labels
-names_models <- c("MV_PCA", "fPCA_off", "fPCA_gcv", "fPCA_mon_hyb")
-lables_models <- c("MV-PCA", "fPCA seq. (no cal.)", "fPCA seq. (gcv cal.)", "fPCA mon. (hybrid cal.)")
+names_models <- c("MV_PCA", "fPCA_off", "fPCA_gcv", "fPCA_mon_hyb", "SpatialPCA")
+lables_models <- c("MV-PCA", "fPCA seq. (no cal.)", "fPCA seq. (gcv cal.)", "fPCA mon. (hybrid cal.)", "SpatialPCA")
 
 ## resolution of the high resolution grid
 n_nodes_HR_grid <- 1000
@@ -124,7 +126,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   RSTUDIO <- FALSE
   source(paste("tests/", test_suite, "/utils/generate_options.R", sep = ""))
-  args[1] <- "test1"
+  args[1] <- "test3"
   generate_options(args[1], path_queue)
   args[2] <- sort(list.files(path_queue))[1]
 }
@@ -183,14 +185,15 @@ if (RUN$tests) {
   for (i in 1:n_reps) {
     ## message
     cat(paste("\nBatch ", i, ":\n", sep = ""))
-
+    
     ## create batch directory
     path_batch <- paste(path_results, "batch_", i, "/", sep = "")
     mkdir(path_batch)
-
+    
     ## generate data if necessary
     file_model_vect <- paste(path_batch, "batch_", i, "_fitted_model_", names_models, ".RData", sep = "")
     if (any(!file.exists(file_model_vect)) || FORCE_FIT || FORCE_EVALUATE) {
+      
       ## generate data
       cat("- Data generation\n")
       generated_data <- generate_2D_data(
@@ -201,16 +204,18 @@ if (RUN$tests) {
         seed = i,
         NSR_X = NSR_X,
         loadings_true_generator = loadings_true_generator,
+        mean_generator <- function(locs) { return(0*locs[,1]) }
       )
-
+      
       ## assembly functional data
       data <- functional_data(
         domain = domain,
         locations = locations,
         X = generated_data$X
       )
+      
     }
-
+    
     ## fit models
     source(paste("tests/", test_suite, "/templates/fit_and_evaluate.R", sep = ""))
   }
@@ -233,14 +238,15 @@ cat.subsection_title("Quantitative analysis")
 
 
 if (RUN$quantitative_analysis) {
+  
   ## open a pdf where to save plots (quantitative analysis)
   if (!RSTUDIO) {
     pdf(file = paste(path_images, name_test, "_quantitative.pdf", sep = ""))
   }
-
+  
   ## plots
   source(paste("tests/", test_suite, "/templates/plot_quantitative_results.R", sep = ""))
-
+  
   ## close pdf (quantitative analysis)
   dev.off()
 }
@@ -255,10 +261,10 @@ if (RUN$qualitative_analysis) {
   if (!RSTUDIO) {
     pdf(file = paste(path_images, name_test, "_qualitative.pdf", sep = ""), width = 10, height = 7)
   }
-
+  
   ## plot
   source(paste("tests/", test_suite, "/templates/plot_qualitative_results.R", sep = ""))
-
+  
   ## close pdf (qualitative analysis)
   dev.off()
 }

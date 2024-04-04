@@ -86,7 +86,7 @@ plot.points <- function(locations, group = NULL, boundary = NULL,
   
   if (!is.null(boundary)) {
     plot <- plot +
-      geom_polygon(data = fortify(boundary), aes(x = long, y = lat), fill = "transparent", color = "black", size = 1)
+      geom_polygon(data = fortify(boundary), aes(x = long, y = lat), fill = "transparent", color = "black", linewidth = 1)
   }
   
   ## add a legend if required
@@ -138,7 +138,7 @@ plot.field_points <- function(locations, f, boundary = NULL,
   
   if (!is.null(boundary)) {
     plot <- plot +
-      geom_polygon(data = fortify(boundary), aes(x = long, y = lat), fill = "transparent", color = "black", size = 1)
+      geom_polygon(data = fortify(boundary), aes(x = long, y = lat), fill = "transparent", color = "black", linewidth = 1)
   }
   
   ## add a legend if required
@@ -171,10 +171,12 @@ plot.field_tile <- function(nodes, f, boundary = NULL,
     coord_fixed()
   
   if(!is.null(breaks) || ISOLINES) {
+    color = "black"
     limits_real <- range(data$value)
     if(is.null(breaks)) {
       breaks <- seq(limits_real[1], limits_real[2], length = 10)
     }
+    breaks_initial <- breaks
     h = breaks[2]-breaks[1]
     if(limits_real[1] < min(breaks)) {
       breaks <- c(sort(seq(min(breaks), limits_real[1]-h, by = -h)[-1]), breaks)
@@ -182,8 +184,12 @@ plot.field_tile <- function(nodes, f, boundary = NULL,
     if(limits_real[2] > max(breaks)) {
       breaks <- c(breaks, seq(max(breaks), limits_real[2]+h, by = h)[-1])
     }
+    if(length(breaks) > 2*length(breaks_initial) ) {
+      breaks <- breaks_initial
+      color = "red"
+    }
     plot <- plot +
-      geom_contour(data = data, aes(x = x, y = y, z = value), color = "black", breaks = breaks)
+      geom_contour(data = data, aes(x = x, y = y, z = value), color = color, breaks = breaks)
   }
   
   if (!discrete) {
@@ -212,7 +218,7 @@ plot.field_tile <- function(nodes, f, boundary = NULL,
   
   if (!is.null(boundary)) {
     plot <- plot +
-      geom_polygon(data = fortify(boundary), aes(x = long, y = lat), fill = "transparent", color = "black", size = 1)
+      geom_polygon(data = fortify(boundary), aes(x = long, y = lat), fill = "transparent", color = "black", linewidth = 1)
   }
   
   ## add a legend if required
@@ -241,6 +247,8 @@ plot.grouped_boxplots <- function(data,
                                   ## subgroup options
                                   subgroup_name = "Models", subgroup_labels = NULL, subgroup_colors = NULL,
                                   values_name = "Score",
+                                  ## limits
+                                  limits = NULL,
                                   ## options
                                   DIVIDERS = TRUE, LEGEND = TRUE) {
   ## data integrety check
@@ -281,6 +289,12 @@ plot.grouped_boxplots <- function(data,
       labels = subgroup_labels
     )
   
+  if (!is.null(limits)) {
+    plot <- plot + scale_y_continuous(
+      limits = limits
+    )
+  }
+  
   ## add groups divider if required
   if (DIVIDERS) {
     if (length(group_labels) > 1) {
@@ -310,16 +324,36 @@ plot.grouped_boxplots <- function(data,
 plot.multiple_lines <- function(data,
                                 ## x axis options
                                 x_name = "Components",
+                                x_breaks = NULL,
                                 ## subgroup options
                                 subgroup_name = "Models", subgroup_labels = NULL, subgroup_colors = NULL,
                                 values_name = "Score",
+                                ## limits
+                                limits = NULL,
                                 ## options
+                                LOGX = FALSE,
+                                LOGY = FALSE,
                                 LOGLOG = FALSE,
+                                NORMALIZED = FALSE,
                                 LEGEND = TRUE) {
   ## rename first column
   columns_names <- colnames(data)
   columns_names[1] <- "x"
   colnames(data) <- columns_names
+  
+  if(NORMALIZED) {
+    for(name in columns_names[-1])
+      data[, name] <- data[, name] / min(data[, name])
+  }
+  
+  if(LOGLOG == TRUE) {
+    LOGX <- TRUE
+    LOGY <- TRUE
+  }
+
+  if(is.logical(x_breaks) && x_breaks) {
+    x_breaks <- unique(data$x)
+  }
   
   ## data reformat
   data <- data %>%
@@ -343,7 +377,7 @@ plot.multiple_lines <- function(data,
   
   ## grouped lines
   plot <- ggplot(data = data, aes(x = x, y = Score, color = SubGroup)) +
-    geom_line() +
+    geom_line(linewidth = 1) +
     labs(x = x_name, y = values_name) +
     scale_color_manual(
       name = subgroup_name,
@@ -351,11 +385,47 @@ plot.multiple_lines <- function(data,
       labels = subgroup_labels
     )
   
-  ## LOGLOG scale
+  ## LOGLOG scale and ref
   if (LOGLOG) {
-    plot <- plot +
-      scale_x_log10() +
-      scale_y_log10()
+    if(NORMALIZED) {
+      x <- seq(min(data$x), max(data$x), length = 10)
+      plot <- plot +
+        geom_line(data = data.frame(x = x, y = x/x[1]), aes(x = x, y = y), linetype = "dashed", color = "grey", linewidth = 0.3) +
+        geom_line(data = data.frame(x = x, y = (x/x[1])^2), aes(x = x, y = y), linetype = "dashed", color = "grey", linewidth = 0.3) +
+        geom_line(data = data.frame(x = x, y = (x/x[1])^3), aes(x = x, y = y), linetype = "dashed", color = "grey", linewidth = 0.3)
+    }
+  }
+  if (LOGX) {
+    if(!is.null(x_breaks)) {
+      plot <- plot +
+        scale_x_log10(breaks = x_breaks)
+    } else {
+      plot <- plot +
+        scale_x_log10()
+    }
+  } else {
+    if(!is.null(x_breaks)) {
+      plot <- plot +
+        scale_x_continuous(breaks = x_breaks)
+    } else {
+      plot <- plot +
+        scale_x_continuous()
+    }
+  }
+  if(LOGY) {
+    if (!is.null(limits)) {
+      plot <- plot + scale_y_log10(
+        limits = limits
+      )
+    } else {
+      plot <- plot + scale_y_log10()
+    }
+  } else {
+    if (!is.null(limits)) {
+      plot <- plot + scale_y_continuous(
+        limits = limits
+      )
+    }
   }
   
   ## add a legend if required
@@ -392,11 +462,11 @@ labled_plots_grid <- function(plot, title = NULL, labels_cols = NULL, labels_row
     labels_grobs_rows <- list()
     if(!is.null(labels_cols)) {
       add <- 1
-      labels_grobs_rows[[1]] <- textGrob(" ", gp = gpar(fontsize = 12, fontface = 'bold'))
+      labels_grobs_rows[[1]] <- textGrob(" ", gp = gpar(fontsize = 12, fontface = 'bold'),)
     }
     for(row in 1:length(labels_rows)+add) {
       label_row <- labels_rows[[row-add]]
-      labels_grobs_rows[[row]] <- textGrob(label_row, gp = gpar(fontsize = 12, fontface = 'bold'))
+      labels_grobs_rows[[row]] <- textGrob(label_row, gp = gpar(fontsize = 12, fontface = 'bold'), rot = 90)
     }
     labels_grobs_rows <- arrangeGrob(grobs = labels_grobs_rows, ncol = 1, heights = c(1, rep(height, n_row)))
   }

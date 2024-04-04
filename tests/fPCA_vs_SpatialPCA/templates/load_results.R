@@ -31,14 +31,14 @@ for (i in 1:n_reps) {
     names_columns
   )
   ## rmse
-  for (name in c("centering", "centering_locs", "loadings", "loadings_locs", "scores", "reconstruction", "reconstruction_locs")) {
+  for (name in c("loadings", "loadings_locs", "scores", "reconstruction", "reconstruction_locs")) {
     rmses[[name]] <- add_results(
       rmses[[name]], extract_new_results(results_evaluation, names_models, c("rmse", name)),
       names_columns
     )
   }
   ## irmse
-  for (name in c("centering", "loadings", "reconstruction")) {
+  for (name in c("loadings", "reconstruction")) {
     irmses[[name]] <- add_results(
       irmses[[name]], extract_new_results(results_evaluation, names_models, c("irmse", name)),
       names_columns
@@ -135,7 +135,7 @@ if(RUN$qualitative_analysis) {
       evaluate_field(grid, model_fPCA_gcv$results$loadings[,3], mesh)
     )
     adjusted_results_fPCA_gcv <- adjust_results(
-      model_fPCA_off$evaluate(model_fPCA_gcv$results$loadings), 
+      model_fPCA_gcv$evaluate(model_fPCA_gcv$results$loadings), 
       model_fPCA_gcv$results$scores,
       loadings_true_locs,
       list(
@@ -158,6 +158,16 @@ if(RUN$qualitative_analysis) {
         loadings_HR = model_fPCA_mon_hyb_load_HR
       ))
     
+    ## ajust loadings SpatialPCA
+    adjusted_results_SpatialPCA <- adjust_results(
+      model_fPCA_mon_hyb$evaluate(model_fPCA_mon_hyb$results$loadings), 
+      model_fPCA_mon_hyb$results$scores,
+      loadings_true_locs,
+      list(
+        loadings = model_fPCA_mon_hyb$results$loadings,
+        loadings_HR = model_SpatialPCA$evaluate_loadings(model_SpatialPCA$model, grid)
+      ))
+    
     ## save adjusted loadings at locations
     scores$MV_PCA[[i]] <- adjusted_results_MV_PCA$scores
     loadings_locs$MV_PCA[[i]] <- adjusted_results_MV_PCA$loadings_locs
@@ -167,16 +177,20 @@ if(RUN$qualitative_analysis) {
     loadings_locs$fPCA_gcv[[i]] <- adjusted_results_fPCA_gcv$loadings_locs
     scores$fPCA_mon_hyb[[i]] <- adjusted_results_fPCA_mon_hyb$scores
     loadings_locs$fPCA_mon_hyb[[i]] <- adjusted_results_fPCA_mon_hyb$loadings_locs
+    scores$SpatialPCA[[i]] <- adjusted_results_SpatialPCA$scores
+    loadings_locs$SpatialPCA[[i]] <- adjusted_results_SpatialPCA$loadings_locs
     
     ## save adjusted loadings at nodes
     loadings$fPCA_off[[i]] <- adjusted_results_fPCA_off$loadings_evaluated_list$loadings
     loadings$fPCA_gcv[[i]] <- adjusted_results_fPCA_gcv$loadings_evaluated_list$loadings
     loadings$fPCA_mon_hyb[[i]] <- adjusted_results_fPCA_mon_hyb$loadings_evaluated_list$loadings
+    loadings$SpatialPCA[[i]] <- adjusted_results_SpatialPCA$loadings_evaluated_list$loadings
     
     ## save adjusted loadings at grid
     loadings_HR$fPCA_off[[i]] <- adjusted_results_fPCA_off$loadings_evaluated_list$loadings_HR
     loadings_HR$fPCA_gcv[[i]] <- adjusted_results_fPCA_gcv$loadings_evaluated_list$loadings_HR
     loadings_HR$fPCA_mon_hyb[[i]] <- adjusted_results_fPCA_mon_hyb$loadings_evaluated_list$loadings_HR
+    loadings_HR$SpatialPCA[[i]] <- adjusted_results_SpatialPCA$loadings_evaluated_list$loadings_HR
     
     cat(paste("- Batch", i, "loaded\n"))
   }

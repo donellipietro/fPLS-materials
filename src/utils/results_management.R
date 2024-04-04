@@ -10,9 +10,9 @@ format_time <- function(t) {
 
 ## dataframes
 
-add_results <- function(data, new, columns_names, groups_names = NULL) {
+add_results <- function(data, new, names_columns, groups_names = NULL) {
   n <- 0
-  for(i in length(new)) {
+  for(i in 1:length(new)) {
     n <- max(c(n, length(new[[i]])))
   }
   ## init
@@ -22,13 +22,13 @@ add_results <- function(data, new, columns_names, groups_names = NULL) {
     new_data <- data.frame(Group = groups_names)
   }
   ## add columns
-  for (subgroup in columns_names[-1]) {
+  for (subgroup in names_columns[-1]) {
     new_data <- cbind(new_data, new[[subgroup]])
   }
-  colnames(new_data) <- columns_names
+  colnames(new_data) <- names_columns
   ## append to given data
   data <- as.data.frame(rbind(data, new_data))
-  colnames(data) <- columns_names
+  colnames(data) <- names_columns
   return(data)
 }
 

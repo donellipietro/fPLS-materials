@@ -132,6 +132,8 @@ generate_2D_data <- function(domain, locs = NULL,
     ## expected results: reconstruction
     X_mean_true = X_mean_true,
     X_mean_true_locs = X_mean_true_locs,
+    X_c_true = X_c_true,
+    X_c_true_locs = X_c_true_locs,
     X_true = X_true,
     X_true_locs = X_true_locs,
     ## expected results: decomposition

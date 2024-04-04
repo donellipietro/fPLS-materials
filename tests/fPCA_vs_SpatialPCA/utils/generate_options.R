@@ -10,9 +10,9 @@ generate_options <- function(name_main_test, path_queue) {
       # - locations != nodes
 
       ## options grid
-      n_nodes_vect <- round(sqrt(c(800, 1200, 1600, 2400, 3200)))^2
-      n_locs_vect <- c(200, 400, 800, 1600, 3200)
-      n_stat_units_vect <- c(50, 100, 200, 400, 800)
+      n_nodes_vect <- 1600
+      n_locs_vect <- c(50, 100, 200, 400, 800, 1600, 3200)
+      n_stat_units_vect <- c(50, 200, 800)
 
       ## fixed options
       name_mesh <- "unit_square"
@@ -61,16 +61,16 @@ generate_options <- function(name_main_test, path_queue) {
     },
     test2 = {
       # Test 2: test_name
-      # - domain = unit_square_medium
+      # - domain = c_shaped
       # - locations != nodes
       
       ## options grid
       n_nodes_vect <- 1600
       n_stat_units_vect <- 50
-      n_locs_vect <- c(50, 200, 800, 3200, 6400, 12800)
+      n_locs_vect <- c(30, 40, 50)
       
       ## fixed options
-      name_mesh <- "unit_square"
+      name_mesh <- "c_shaped"
       locs_eq_nodes <- FALSE
       n_comp <- 3
       n_reps <- 5
@@ -81,9 +81,9 @@ generate_options <- function(name_main_test, path_queue) {
         for (n_locs in n_locs_vect) {
           for (n_stat_units in n_stat_units_vect) {
             name_test <- paste(
-              "test2_us",
+              "test2_cs",
               sprintf("%0*d", 4, n_nodes),
-              sprintf("%0*d", 5, n_locs),
+              sprintf("%0*d", 4, n_locs),
               sprintf("%0*d", 4, n_stat_units),
               NSR_X, n_comp,
               sep = "_"
@@ -114,6 +114,7 @@ generate_options <- function(name_main_test, path_queue) {
         }
       }
     },
+    ## add other tests within the test suite
     {
       stop(paste("The test", name_main_test, "does not exist"))
     }

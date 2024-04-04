@@ -25,8 +25,14 @@ install: install_fdaPDE2 install_femR
 test_fPCA:
 	@echo "Running fPCA tests..."
 	@./run_tests.sh fPCA test1
+	@./run_tests.sh fPCA test2
+	
+test_fPCA_vs_SpatialPCA:
+	@echo "Running fPCA vs SpatialPCA tests..."
+	@./run_tests.sh fPCA_vs_SpatialPCA test1
+	@./run_tests.sh fPCA_vs_SpatialPCA test2
 
-test: build clean test_fPCA
+test: build clean test_fPCA test_fPCA_vs_SpatialPCA
 	@echo "All tests completed."
 
 # Build target
