@@ -3,7 +3,7 @@
 # $1: test suite name
 # $2: test name
 
-RScript tests/$1/init.R $2
+RScript src/init.R $1 $2
 
 # Set the directory containing the files
 directory="queue/"

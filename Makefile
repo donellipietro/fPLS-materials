@@ -2,7 +2,7 @@
 RSCRIPT := Rscript
 
 # Targets
-.PHONY: install build install_fdaPDE2 install_femR clean distclean
+.PHONY: install build install_fdaPDE2 install_femR clean distclean tests test_example
 
 # Description for targets
 
@@ -22,12 +22,12 @@ install: install_fdaPDE2 install_femR
 	@echo "Installation completed."
 
 # Test targets
-# test_:
-# 	@echo "Running ... tests..."
-# 	@./run_tests.sh ... ....
+test_example:
+	@echo "Running example tests..."
+	@./run_tests.sh example test1
 
-# test: build clean ...
-# 	@echo "All tests completed."
+tests: build clean test_example
+	@echo "All tests completed."
 
 # Build target
 build:
