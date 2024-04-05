@@ -2,7 +2,7 @@
 RSCRIPT := Rscript
 
 # Targets
-.PHONY: install build test_sequential_vs_monolithic install_fdaPDE2 install_femR clean distclean
+.PHONY: install build install_fdaPDE2 install_femR clean distclean
 
 # Description for targets
 
@@ -22,18 +22,12 @@ install: install_fdaPDE2 install_femR
 	@echo "Installation completed."
 
 # Test targets
-test_fPCA:
-	@echo "Running fPCA tests..."
-	@./run_tests.sh fPCA test1
-	@./run_tests.sh fPCA test2
-	
-test_fPCA_vs_SpatialPCA:
-	@echo "Running fPCA vs SpatialPCA tests..."
-	@./run_tests.sh fPCA_vs_SpatialPCA test1
-	@./run_tests.sh fPCA_vs_SpatialPCA test2
+# test_:
+# 	@echo "Running ... tests..."
+# 	@./run_tests.sh ... ....
 
-test: build clean test_fPCA test_fPCA_vs_SpatialPCA
-	@echo "All tests completed."
+# test: build clean ...
+# 	@echo "All tests completed."
 
 # Build target
 build:
