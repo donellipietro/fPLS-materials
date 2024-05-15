@@ -16,7 +16,7 @@ RMSE <- function(x) {
 IRMSE <- function(x, model) {
   x <- as.matrix(x)
   n_stat_unit <- ncol(x)
-  return(sqrt(sum((t(x) %*% model$R0() %*% x)) / n_stat_unit))
+  return(sqrt(sum(diag(t(x) %*% model$R0() %*% x)) / n_stat_unit))
 }
 
 ## angles
