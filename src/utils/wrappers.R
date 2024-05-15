@@ -102,3 +102,21 @@ MV_PCA_wrapped <- function(data, center = TRUE, n_comp = 3) {
     )
   ))
 }
+
+
+ColMean_wrapped <- function(data) {
+  ## data
+  X <- data$X
+  
+  ## centering
+  X_mean_locs <- colMeans(X)
+  
+  return(list(
+    model = NULL,
+    results = list(
+      X_mean = NULL,
+      X_mean_locs = X_mean_locs
+    )
+  ))
+}
+
