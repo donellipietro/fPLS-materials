@@ -18,7 +18,12 @@ c_shape_domain_loadings <- function(locs, i) {
 ## mean generator
 log_mean_generator <- function(locs) {
   ## I want a function between -1 and 1
-  return((2 * log((locs[, 1] + locs[, 2]) + 1) / log(3) - 1)) # *sin(4*pi/sqrt(2)*(locs[, 1] + locs[, 2])))
+  return((2 * log((locs[, 1] + locs[, 2]) + 1) / log(3) - 1))
+}
+
+sin_mean_generator <- function(locs) {
+  ## I want a function between -1 and 1
+  return(sin(4 * pi * locs[, 1]) * sin(4 * pi * locs[, 2]) * exp(-8*((locs[, 1]-0.5)^2 + (locs[, 2]-0.5)^2)))
 }
 
 ## data generator
@@ -26,7 +31,7 @@ generate_2D_data <- function(domain, locs = NULL,
                              loadings_true_generator = NULL, mean_generator = NULL,
                              n_stat_units = 50,
                              n_comp = 3,
-                             NSR_X = 0.2^2,
+                             NSR_last_comp = 0.5,
                              seed = 0,
                              VERBOSE = FALSE) {
   ## set defaults
@@ -61,7 +66,7 @@ generate_2D_data <- function(domain, locs = NULL,
   ## sd = sqrt(Var[score*loading]) = sqrt(Var[score] * semi_range(loading)^2) = sqrt(Var[score]) * semi_range(loading)
   ## sigma = sqrt(Var[score])
   ## => sigma = sd / semi_range(loading)
-  sd_s <- exp(seq(0, log(0.5), length = n_comp))
+  sd_s <- 4*exp(seq(0, log(0.25), length = n_comp))
   semi_range_loadings_true <- 0.5 * (apply(loadings_true, 2, max) - apply(loadings_true, 2, min))
   sigma_s <- sd_s / semi_range_loadings_true
 
@@ -74,33 +79,34 @@ generate_2D_data <- function(domain, locs = NULL,
     cat(paste("\n- Desired components sd:", sd_s))
     cat(paste("\n- Loadings semi-ramges:", semi_range_loadings_true))
     cat(paste("\n- Effective scores sd:", sigma_s))
+    cat("\n")
   }
 
-  ## computing the noise sd. (sigma_noise)
-  ## NSR_X = Var[noise]/Var[X]
-  ## Var[X] = Var[sum(score_i * loadings_i)] = ind. = sum(sd_s_i^2)
-  ## => Var[noise] = NSR_X * Var[X] = NSR_X * sum(sd_s_i^2)
-  ## => sigma_noise = sqrt(Var[noise]) = sqrt(NSR_X * sum(sd_s_i^2))
-  sigma_noise_x <- sqrt(NSR_X * sum(sd_s^2))
-
+	## computing the noise sd. (sigma_noise)
+	## NSR_last_comp = Var[noise]/Var[3rd comp.]
+	## Var[3rd comp.] = Var[score_3 * loadings_3] = sd_s_3^2
+	## => Var[noise] = NSR_last_comp * Var[3rd comp.] = NSR_last_comp * sd_s_3^2
+  sigma_noise_x <- sqrt(NSR_last_comp * min(sd_s^2))
+  NSR_X <- NSR_last_comp *  min(sd_s^2) / sum(sd_s^2)
 
   if (VERBOSE) {
     cat("\n\n# Computing the noise sd. (sigma_noise)")
-    cat("\nNSR_X = Var[noise]/Var[X]")
-    cat("\nVar[X] = Var[sum(score_i * loadings_i)] = ind. = sum(sd_s_i^2)")
-    cat("\n=> Var[noise] = NSR_X * Var[X] = NSR_X * sum(sd_s_i^2)")
-    cat("\n=> sigma_noise = sqrt(Var[noise]) = sqrt(NSR_X * sum(sd_s_i^2))")
+    cat("\nNSR_last_comp = Var[noise]/Var[3rd comp.]")
+    cat("\nVar[3rd comp.] = Var[score_3 * loadings_3] = sd_s_3^2")
+    cat("\n=> Var[noise] = NSR_last_comp * Var[3rd comp.] = NSR_last_comp * sd_s_3^2")
+    cat("\n=> sigma_noise = sqrt(Var[noise]) = sqrt(NSR_last_comp * sd_s_3^2")
     cat("\n")
-    cat(paste("\n- Desired Noise to Signal Ratio:", NSR_X))
+    cat(paste("\n- Desired Noise to Signal Ratio:", NSR_last_comp))
     cat(paste("\n- Effective noise sd:", sigma_noise_x))
+    cat("\n")
   }
 
   ## sampling
   set.seed(seed)
   Sampled <- mvrnorm(n_stat_units, mu = rep(0, n_comp + n_locs), diag(c(sigma_s^2, rep(sigma_noise_x^2, n_locs))))
-  scores_true <- as.matrix(Sampled[, 1:n_comp], ncol = n_comp)
-  EE <- Sampled[, (n_comp + 1):(n_comp + n_locs)]
-
+  scores_true <- scale(as.matrix(Sampled[, 1:n_comp], ncol = n_comp), scale=FALSE)
+  EE <- scale(as.matrix(Sampled[, (n_comp + 1):(n_comp + n_locs)], ncol = n_locs), scale=FALSE)
+  
   ## generating X:
   X_c_true <- scores_true %*% t(loadings_true)
   X_c_true_locs <- scores_true %*% t(loadings_true_locs)
@@ -143,6 +149,7 @@ generate_2D_data <- function(domain, locs = NULL,
     ## computed
     sd_s = sd_s,
     sigma_s = sigma_s,
-    sigma_noise_x = sigma_noise_x
+    sigma_noise_x = sigma_noise_x,
+    NSR_X
   ))
 }
