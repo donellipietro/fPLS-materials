@@ -49,12 +49,12 @@ file_log <- "log.txt"
 
 ## options ----
 
-## colors
-colors <- c(brewer.pal(3, "Purples")[3], brewer.pal(3, "Blues")[3])
+## colors used in the plots
+colors <- c(brewer.pal(3, "Greys")[3], brewer.pal(3, "Blues")[2:3])
 
 ## names and labels
-names_models <- c("MV_PCA", "fPCA")
-lables_models <- c("MV-PCA", "fPCA")
+names_models <- c("MV_PCA", "fPCA_off", "fPCA_kcv")
+lables_models <- c("MV-PCA", "fPCA (no calibration)", "fPCA (kcv calibration)")
 
 
 ## load data ----
@@ -232,7 +232,7 @@ for (i in 1:length(name_aggregation_option_vect)) {
     ]
     colnames(data_plot_trimmed) <- c("Group", names_models)
     indexes <- which(!is.nan(colSums(data_plot_trimmed[, names_models])))
-    data_plot_aggregated <- aggregate(. ~ Group, data = data_plot_trimmed, FUN = mean)
+    data_plot_aggregated <- aggregate(. ~ Group, data = data_plot_trimmed, FUN = median)
 
     ## plots
     boxplot_list[[j]] <- plot.grouped_boxplots(

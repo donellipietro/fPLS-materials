@@ -13,7 +13,6 @@ angles <- list()
 ## laod pers' results seqly
 for (i in 1:n_reps) {
   ## laod batch and log if not present
-  sink(file_log, append = TRUE)
   tryCatch(
     {
       path_batch <- paste(path_results, "batch_", i, "/", sep = "")
@@ -23,7 +22,6 @@ for (i in 1:n_reps) {
       cat(paste("Error in test ", name_test, " - batch ", i, ": ", conditionMessage(e), "\n", sep = ""))
     }
   )
-  sink()
   
   ## times
   times <- add_results(
@@ -69,7 +67,6 @@ if(RUN$qualitative_analysis) {
   for (i in 1:n_reps) {
     
     ## laod batch and log if not present
-    sink(file_log, append = TRUE)
     tryCatch(
       {
         path_batch <- paste(path_results, "/", "batch_", i, "/", sep = "")
@@ -81,8 +78,7 @@ if(RUN$qualitative_analysis) {
         cat(paste("Error in test ", name_test, " - batch ", i, ": ", conditionMessage(e), "\n", sep = ""))
       }
     )
-    sink()
-    
+
     ## adjust loadings true
     loadings_true_locs <- cbind(
       loadings_true_generator(locations, 1),
@@ -113,32 +109,51 @@ if(RUN$qualitative_analysis) {
       model_MV_PCA$results$scores,
       loadings_true_locs)
     
-    ## ajust loadings model_fPCA
-    model_fPCA_load_HR <- cbind(
-      evaluate_field(grid, model_fPCA$results$loadings[,1], mesh),
-      evaluate_field(grid, model_fPCA$results$loadings[,2], mesh),
-      evaluate_field(grid, model_fPCA$results$loadings[,3], mesh)
+    ## ajust loadings model_fPCA_off
+    model_fPCA_off_load_HR <- cbind(
+      evaluate_field(grid, model_fPCA_off$results$loadings[,1], mesh),
+      evaluate_field(grid, model_fPCA_off$results$loadings[,2], mesh),
+      evaluate_field(grid, model_fPCA_off$results$loadings[,3], mesh)
     )
-    adjusted_results_fPCA <- adjust_results(
-      model_fPCA$evaluate(model_fPCA$results$loadings), 
-      model_fPCA$results$scores,
+    adjusted_results_fPCA_off <- adjust_results(
+      model_fPCA_off$evaluate(model_fPCA_off$results$loadings), 
+      model_fPCA_off$results$scores,
       loadings_true_locs,
       list(
-        loadings = model_fPCA$results$loadings,
-        loadings_HR = model_fPCA_load_HR
+        loadings = model_fPCA_off$results$loadings,
+        loadings_HR = model_fPCA_off_load_HR
+      ))
+    
+    ## ajust loadings model_fPCA_kcv
+    model_fPCA_kcv_load_HR <- cbind(
+      evaluate_field(grid, model_fPCA_kcv$results$loadings[,1], mesh),
+      evaluate_field(grid, model_fPCA_kcv$results$loadings[,2], mesh),
+      evaluate_field(grid, model_fPCA_kcv$results$loadings[,3], mesh)
+    )
+    adjusted_results_fPCA_kcv <- adjust_results(
+      model_fPCA_kcv$evaluate(model_fPCA_kcv$results$loadings), 
+      model_fPCA_kcv$results$scores,
+      loadings_true_locs,
+      list(
+        loadings = model_fPCA_kcv$results$loadings,
+        loadings_HR = model_fPCA_kcv_load_HR
       ))
     
     ## save adjusted loadings at locations
     scores$MV_PCA[[i]] <- adjusted_results_MV_PCA$scores
     loadings_locs$MV_PCA[[i]] <- adjusted_results_MV_PCA$loadings_locs
-    scores$fPCA[[i]] <- adjusted_results_fPCA$scores
-    loadings_locs$fPCA[[i]] <- adjusted_results_fPCA$loadings_locs
-
+    scores$fPCA_off[[i]] <- adjusted_results_fPCA_off$scores
+    loadings_locs$fPCA_off[[i]] <- adjusted_results_fPCA_off$loadings_locs
+    scores$fPCA_kcv[[i]] <- adjusted_results_fPCA_kcv$scores
+    loadings_locs$fPCA_kcv[[i]] <- adjusted_results_fPCA_kcv$loadings_locs
+    
     ## save adjusted loadings at nodes
-    loadings$fPCA[[i]] <- adjusted_results_fPCA$loadings_evaluated_list$loadings
+    loadings$fPCA_off[[i]] <- adjusted_results_fPCA_off$loadings_evaluated_list$loadings
+    loadings$fPCA_kcv[[i]] <- adjusted_results_fPCA_kcv$loadings_evaluated_list$loadings
 
     ## save adjusted loadings at grid
-    loadings_HR$fPCA[[i]] <- adjusted_results_fPCA$loadings_evaluated_list$loadings_HR
+    loadings_HR$fPCA_off[[i]] <- adjusted_results_fPCA_off$loadings_evaluated_list$loadings_HR
+    loadings_HR$fPCA_kcv[[i]] <- adjusted_results_fPCA_kcv$loadings_evaluated_list$loadings_HR
 
     cat(paste("- Batch", i, "loaded\n"))
   }

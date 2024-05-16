@@ -66,13 +66,10 @@ path_images <- paste("images/", test_suite, "/", sep = "")
 mkdir(c(path_results, path_images))
 
 path_queue <- paste("queue/", sep = "")
-
-
-# files ----
-
-file_log <- "log.txt"
-
-
+path_logs <- paste("logs/", sep = "")
+mkdir(c(path_logs))
+  
+  
 # options ----
 
 ## force testing even if a fit is already available
@@ -91,19 +88,19 @@ RSTUDIO <- FALSE
 
 
 ## calibration parameters ----
-
-seed <- 100 # for gcv
-lambda_grid <- fdaPDE2::hyperparameters(10^seq(-6, 1, by = 0.1))
+seed <- 0 # for gcv calibration procedure
+lambda_fixed <- fdaPDE2::hyperparameters(1e-7)
+lambda_grid <- fdaPDE2::hyperparameters(10^seq(-9, 2, by = 0.1))
 
 
 ## visualization options ----
 
 ## colors used in the plots
-colors <- c(brewer.pal(3, "Purples")[3], brewer.pal(3, "Blues")[3])
+colors <- c(brewer.pal(3, "Greys")[3], brewer.pal(3, "Blues")[2:3])
 
 ## names and labels
-names_models <- c("MV_PCA", "fPCA")
-lables_models <- c("MV-PCA", "fPCA")
+names_models <- c("MV_PCA", "fPCA_off", "fPCA_kcv")
+lables_models <- c("MV-PCA", "fPCA (no calibration)", "fPCA (kcv calibration)")
 
 ## resolution of the high resolution grid
 n_nodes_HR_grid <- 1000
@@ -142,9 +139,16 @@ n_locs <- parsed_json$dimensions$n_locs
 n_stat_units <- parsed_json$dimensions$n_stat_units
 n_comp <- parsed_json$dimensions$n_comp
 n_reps <- parsed_json$dimensions$n_reps
+mean <- parsed_json$data$mean
 locs_eq_nodes <- parsed_json$data$locs_eq_nodes
-NSR_X <- parsed_json$noise$NSR_X
+NSR_last_comp <- parsed_json$noise$NSR
 # ... (add options if necessary)
+
+## log file
+file_log <- paste(path_logs, "log_",name_test,".txt", sep = "")
+if(!RSTUDIO){
+  sink(file_log, append = TRUE)
+}
 
 ## options visualization
 cat.json(parsed_json)
@@ -183,11 +187,11 @@ if (RUN$tests) {
   for (i in 1:n_reps) {
     ## message
     cat(paste("\nBatch ", i, ":\n", sep = ""))
-
+    
     ## create batch directory
     path_batch <- paste(path_results, "batch_", i, "/", sep = "")
     mkdir(path_batch)
-
+    
     ## generate data if necessary
     file_model_vect <- paste(path_batch, "batch_", i, "_fitted_model_", names_models, ".RData", sep = "")
     if (any(!file.exists(file_model_vect)) || FORCE_FIT || FORCE_EVALUATE) {
@@ -199,10 +203,11 @@ if (RUN$tests) {
         n_stat_units = n_stat_units,
         n_comp = n_comp,
         seed = i,
-        NSR_X = NSR_X,
+        NSR_last_comp = NSR_last_comp,
         loadings_true_generator = loadings_true_generator,
+        mean_generator = ifelse(mean, log_mean_generator, function(locs) { return(locs[,1]*0) })
       )
-
+      
       ## assembly functional data
       data <- functional_data(
         domain = domain,
@@ -210,7 +215,7 @@ if (RUN$tests) {
         X = generated_data$X
       )
     }
-
+    
     ## fit models
     source(paste("tests/", test_suite, "/templates/fit_and_evaluate.R", sep = ""))
   }
@@ -237,10 +242,10 @@ if (RUN$quantitative_analysis) {
   if (!RSTUDIO) {
     pdf(file = paste(path_images, name_test, "_quantitative.pdf", sep = ""))
   }
-
+  
   ## plots
   source(paste("tests/", test_suite, "/templates/plot_quantitative_results.R", sep = ""))
-
+  
   ## close pdf (quantitative analysis)
   dev.off()
 }
@@ -255,10 +260,10 @@ if (RUN$qualitative_analysis) {
   if (!RSTUDIO) {
     pdf(file = paste(path_images, name_test, "_qualitative.pdf", sep = ""), width = 10, height = 7)
   }
-
+  
   ## plot
   source(paste("tests/", test_suite, "/templates/plot_qualitative_results.R", sep = ""))
-
+  
   ## close pdf (qualitative analysis)
   dev.off()
 }
@@ -272,3 +277,7 @@ if (RUN$qualitative_analysis) {
 file.remove(paste(path_queue, file_options, sep = ""))
 
 cat("\n\n")
+
+if(!RSTUDIO){
+  sink()
+}

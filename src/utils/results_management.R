@@ -3,6 +3,8 @@
 format_time <- function(t) {
   if (attr(t, "units") == "mins") {
     return(as.numeric(t) * 60)
+  } else if (attr(t, "units") == "hours") {
+    return(as.numeric(t) * 60 * 60)
   } else {
     return(as.numeric(t))
   }

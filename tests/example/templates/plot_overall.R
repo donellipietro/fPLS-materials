@@ -37,7 +37,7 @@ for(i in c(2)) {
                                    c(name_aggregation_option, names_models)]
     colnames(data_plot_trimmed) <- c("Group", names_models)
     indexes <- which(!is.nan(colSums(data_plot_trimmed[, names_models])))
-    data_plot_aggregated <- aggregate(. ~ Group, data = data_plot_trimmed[, c("Group", names(indexes))], FUN = mean)
+    data_plot_aggregated <- aggregate(. ~ Group, data = data_plot_trimmed[, c("Group", names(indexes))], FUN = median)
     
     ## plots
     boxplot_list[[j]] <- plot.grouped_boxplots(

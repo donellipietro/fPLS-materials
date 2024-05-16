@@ -22,11 +22,21 @@ install: install_fdaPDE2 install_femR
 	@echo "Installation completed."
 
 # Test targets
-test_example:
+
+test_example: build clean
 	@echo "Running example tests..."
 	@./run_tests.sh example test1
 
-tests: build clean test_example
+tests: test_example
+	@echo "All tests completed."
+
+# Test targets parallel
+
+test_example_parallel: build clean
+	@echo "Running example tests..."
+	@./run_tests_parallel.sh example test1
+	
+tests_parallel: test_example_parallel
 	@echo "All tests completed."
 
 # Build target
@@ -40,6 +50,8 @@ build:
 # Clean targets
 clean_options:
 	@$(RM) -r queue/
+	@$(RM) -r logs/
+
 
 clean: clean_options
 	@echo "Cleaning temporary files..."
