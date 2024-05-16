@@ -52,7 +52,7 @@ n_locs <- 800
 n_stat_units <- 200
 locs_eq_nodes <- FALSE
 n_comp <- 3
-NSR_X <- 0.2^2
+NSR_last_comp <- 0.2^2
 
 
 ## domain & locations ----
@@ -77,7 +77,7 @@ generated_data <- generate_2D_data(
   loadings_true_generator = loadings_true_generator,
   n_stat_units = n_stat_units,
   n_comp = n_comp,
-  NSR_X = NSR_X,
+  NSR_last_comp = NSR_last_comp,
   seed = 1,
   VERBOSE = TRUE
 )

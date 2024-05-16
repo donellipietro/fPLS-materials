@@ -66,8 +66,10 @@ evaluate_results <- function(model, generated_data) {
   ## RMSE at locations
 
   ## centering
-  norm <- ifelse(RMSE(generated_data$X_mean_true_locs) == 0, 1, RMSE(generated_data$X_mean_true_locs))
-  rmse$centering_locs <- RMSE(model$results$X_mean_locs - generated_data$X_mean_true_locs) / norm
+  if(!is.null(model$results$X_mean_locs)){
+    norm <- ifelse(RMSE(generated_data$X_mean_true_locs) == 0, 1, RMSE(generated_data$X_mean_true_locs))
+    rmse$centering_locs <- RMSE(model$results$X_mean_locs - generated_data$X_mean_true_locs) / norm
+  }
 
   ## loadings & scores
 
@@ -107,9 +109,11 @@ evaluate_results <- function(model, generated_data) {
 
   ## IRMSE (if possible)
   if (model$model_traits$is_functional) {
-    norm <- IRMSE(generated_data$X_mean_true, model)
-    norm <- ifelse(norm == 0, 1, norm)
-    irmse$centering <- IRMSE(model$results$X_mean - generated_data$X_mean_true, model) / norm
+    if(!is.null(model$results$X_mean)){
+      norm <- IRMSE(generated_data$X_mean_true, model)
+      norm <- ifelse(norm == 0, 1, norm)
+      irmse$centering <- IRMSE(model$results$X_mean - generated_data$X_mean_true, model) / norm
+    }
     for (h in 1:n_comp) {
       norm <- IRMSE(generated_data$loadings_true[, h], model)
       irmse$loadings[h] <- IRMSE(adjusted_results$loadings_evaluated_list$loadings[, h] - generated_data$loadings_true[, h], model) / norm

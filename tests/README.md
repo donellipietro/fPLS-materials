@@ -91,7 +91,7 @@ generate_options <- function(name_main_test, path_queue) {
            locs_eq_nodes <- FALSE
            n_comp <- 3
            n_reps <- 11 # odd number to avoid errors in qualitative results plots
-           NSR_X <- 1^2 # NSR_X = Var[noise]/Var[X]
+           NSR <- 1^2 # NSR = Var[noise]/Var[X]
 
            ## assembly jsons
            for (n_nodes in n_nodes_vect) {
@@ -102,7 +102,7 @@ generate_options <- function(name_main_test, path_queue) {
                    sprintf("%0*d", floor(log10(max(n_nodes_vect))) + 1, n_nodes),
                    sprintf("%0*d", floor(log10(max(n_locs_vect))) + 1, n_locs),
                    sprintf("%0*d", floor(log10(max(n_stat_units_vect))) + 1, n_stat_units),
-                   NSR_X, n_comp,
+                   NSR, n_comp,
                    sep = "_"
                  )
                  json_list <- list(
