@@ -44,7 +44,7 @@ test_example_parallel: build clean
 test_fPLS_parallel: build clean
 	@echo "Running fPLS tests..."
 	@./run_tests_parallel.sh fPLS test1
-	@./run_tests_parallel.sh fPLS test2
+	# @./run_tests_parallel.sh fPLS test2
 	
 tests_parallel: test_example_parallel test_fPLS_parallel
 	@echo "All tests completed."

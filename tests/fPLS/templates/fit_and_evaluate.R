@@ -10,16 +10,16 @@ if (file.exists(paste(path_batch, "batch_", i, "_results_evaluation.RData", sep 
 }
 
 
-### Molde MV-PLS-R ----
+### Molde MV-PLS ----
 model_MV_PLS <- NULL
 file_model <- paste(path_batch, "batch_", i, "_fitted_model_MV_PLS.RData", sep = "")
 if (file.exists(file_model) && !FORCE_FIT) {
   if(FORCE_EVALUATE) {
-    cat("- Loading fitted MV-PLS-R ... \n")
+    cat("- Loading fitted MV-PLS ... \n")
     load(file_model)
   }
 } else if ("MV_PLS" %in% names_models) {
-  cat("- Fitting MV-PLS-R ... ")
+  cat("- Fitting MV-PLS ... ")
   
   ## model fit
   start.time <- Sys.time()
@@ -57,16 +57,16 @@ if(!is.null(model_MV_PLS)) {
 }
 
 
-### Model fPLS-R no calibration ----
+### Model fPLS no calibration ----
 model_fPLS_off <- NULL
 file_model <- paste(path_batch, "batch_", i, "_fitted_model_fPLS_off.RData", sep = "")
 if (file.exists(file_model) && !FORCE_FIT) {
   if(FORCE_EVALUATE) {
-    cat("- Loading fitted fPLS-R sequential (no calibration) ... \n")
+    cat("- Loading fitted fPLS sequential (no calibration) ... \n")
     load(file_model)
   }
 } else if ("fPLS_off" %in% names_models) {
-  cat("- Fitting fPLS-R sequential (no calibration) ... ")
+  cat("- Fitting fPLS sequential (no calibration) ... ")
   
   ## model fit
   start.time <- Sys.time()
@@ -106,16 +106,16 @@ if(!is.null(model_fPLS_off)) {
 }
 
 
-### Model fPLS-R (gcv calibration) ----
-model_fPLS_kcv <- NULL
+### Model fPLS (gcv calibration) ----
+model_fPLS_gcv <- NULL
 file_model <- paste(path_batch, "batch_", i, "_fitted_model_fPLS_gcv.RData", sep = "")
 if (file.exists(file_model) && !FORCE_FIT) {
   if(FORCE_EVALUATE) {
-    cat("- Loading fitted fPLS-R sequential (gcv calibration) ... \n")
+    cat("- Loading fitted fPLS sequential (gcv calibration) ... \n")
     load(file_model)
   }
-} else if ("fPLS-R_gcv" %in% names_models) {
-  cat("- Fitting fPLS-R sequential (gcv calibration) ... ")
+} else if ("fPLS_gcv" %in% names_models) {
+  cat("- Fitting fPLS sequential (gcv calibration) ... ")
   
   ## model fit
   start.time <- Sys.time()

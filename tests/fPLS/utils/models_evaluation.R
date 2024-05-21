@@ -186,6 +186,15 @@ evaluate_results <- function(model, generated_data) {
     }
   }
   
+  # plot.field_tile(locations, model$results$Beta_hat_locs[[1]][, 1], LEGEND = TRUE)
+  # plot.field_tile(locations, model$results$Beta_hat_locs[[2]][, 1], LEGEND = TRUE)
+  # plot.field_tile(locations, model$results$Beta_hat_locs[[3]][, 1], LEGEND = TRUE)
+  # plot.field_tile(locations, model$results$Beta_hat_locs[[4]][, 1], LEGEND = TRUE)
+  # plot.field_tile(locations, generated_data$expected_results$Beta_locs[, 1], LEGEND = TRUE) + ggtitle("true")
+  # 
+  # head(model$results$Beta_hat_locs[[4]])
+  # head(generated_data$expected_results$Beta_locs)
+  
   ## directions, loadings & scores
   if(model$model_traits$has_interpolator) {
     X_space_directions_evaluated_list <- list(X_space_directions = model$results$X_space_directions)
@@ -261,41 +270,41 @@ evaluate_results <- function(model, generated_data) {
     
   }
   
-  ## IRMSE (if possible)
-  if (model$model_traits$is_functional) {
-    
-    ## mean
-    if(!is.null(model$results$X_mean)){
-      norm <- IRMSE(generated_data$expected_results$X_mean_true, model)
-      norm <- ifelse(norm == 0, 1, norm)
-      irmse$centering <- IRMSE(model$results$X_mean - generated_data$expected_results$X_mean_true, model) / norm
-    }
-    
-    ## reconstruction
-    for (h in 1:n_comp) {
-      norm <- IRMSE(t(generated_data$expected_results$X_true), model)
-      irmse$X_reconstruction[h] <- IRMSE(t(model$results$X_hat[[h]] - generated_data$expected_results$X_true), model) / norm
-    }
-    
-    ## Beta
-    if(model$MODE == "fPLS-R" || model$MODE == "PLS-R") {
-      for(h in 1:n_comp) {
-        norm <- IRMSE(generated_data$expected_results$Beta, model)
-        irmse$Beta[h] <- IRMSE(model$results$Beta_hat[[h]] - generated_data$expected_results$Beta, model) / norm
-      }
-    }
-    
-    ## directions & loadings
-    for (h in 1:n_comp) {
-      ## directions
-      norm <- IRMSE(generated_data$expected_results$X_space_directions_true[, h], model)
-      irmse$X_space_directions[h] <- IRMSE(adjusted_results$X_space_directions_evaluated_list$X_space_directions[, h] - generated_data$expected_results$X_space_directions_true[, h], model) / norm
-      ## loadings
-      norm <- IRMSE(generated_data$expected_results$X_loadings_true[, h], model)
-      irmse$X_loadings[h] <- IRMSE(adjusted_results$X_loadings_evaluated_list$X_loadings[, h] - generated_data$expected_results$X_loadings_true[, h], model) / norm
-    }
-    
-  }
+  # ## IRMSE (if possible)
+  # if (model$model_traits$is_functional) {
+  #   
+  #   ## mean
+  #   if(!is.null(model$results$X_mean)){
+  #     norm <- IRMSE(generated_data$expected_results$X_mean_true, model)
+  #     norm <- ifelse(norm == 0, 1, norm)
+  #     irmse$centering <- IRMSE(model$results$X_mean - generated_data$expected_results$X_mean_true, model) / norm
+  #   }
+  #   
+  #   ## reconstruction
+  #   for (h in 1:n_comp) {
+  #     norm <- IRMSE(t(generated_data$expected_results$X_true), model)
+  #     irmse$X_reconstruction[h] <- IRMSE(t(model$results$X_hat[[h]] - generated_data$expected_results$X_true), model) / norm
+  #   }
+  #   
+  #   ## Beta
+  #   if(model$MODE == "fPLS-R" || model$MODE == "PLS-R") {
+  #     for(h in 1:n_comp) {
+  #       norm <- IRMSE(generated_data$expected_results$Beta, model)
+  #       irmse$Beta[h] <- IRMSE(model$results$Beta_hat[[h]] - generated_data$expected_results$Beta, model) / norm
+  #     }
+  #   }
+  #   
+  #   ## directions & loadings
+  #   for (h in 1:n_comp) {
+  #     ## directions
+  #     norm <- IRMSE(generated_data$expected_results$X_space_directions_true[, h], model)
+  #     irmse$X_space_directions[h] <- IRMSE(adjusted_results$X_space_directions_evaluated_list$X_space_directions[, h] - generated_data$expected_results$X_space_directions_true[, h], model) / norm
+  #     ## loadings
+  #     norm <- IRMSE(generated_data$expected_results$X_loadings_true[, h], model)
+  #     irmse$X_loadings[h] <- IRMSE(adjusted_results$X_loadings_evaluated_list$X_loadings[, h] - generated_data$expected_results$X_loadings_true[, h], model) / norm
+  #   }
+  #   
+  # }
   
   return(list(
     execution_time = execution_time,

@@ -71,8 +71,8 @@ mkdir(c(path_results, path_images))
 path_queue <- paste("queue/", sep = "")
 path_logs <- paste("logs/", sep = "")
 mkdir(c(path_logs))
-  
-  
+
+
 # options ----
 
 ## force testing even if a fit is already available
@@ -184,7 +184,7 @@ mesh <- generated_domain$mesh
 locations <- generate_locations(generated_domain, locs_eq_nodes)
 
 ## grid
-grid <- spsample(domain_boundary, n_nodes_HR_grid, "regular")@coords
+grid_HR <- spsample(domain_boundary, n_nodes_HR_grid, "regular")@coords
 
 ## fit the models n_reps times
 if (RUN$tests) {
@@ -213,6 +213,7 @@ if (RUN$tests) {
         n_nodes = n_nodes,
         NSR_X_last_comp = NSR_X_last_comp,
         NSR_Y = NSR_Y,
+        batch = i,
         seed = i
       )
       
@@ -267,11 +268,27 @@ cat.subsection_title("Qualitative analysis")
 if (RUN$qualitative_analysis) {
   ## open a pdf where to save plots (qualitative analysis)
   if (!RSTUDIO) {
-    pdf(file = paste(path_images, name_test, "_qualitative.pdf", sep = ""), width = 10, height = 7)
+    pdf(file = paste(path_images, name_test, "_qualitative_X_space_directions.pdf", sep = ""), width = 10, height = 7)
   }
   
   ## plot
-  source(paste("tests/", test_suite, "/templates/plot_qualitative_results.R", sep = ""))
+  labels_rows <- c("w1", "w2", "w3", "w4")
+  source(paste("tests/", test_suite, "/templates/plot_qualitative_results_X_space_directions.R", sep = ""))
+  
+  ## close pdf (qualitative analysis)
+  dev.off()
+}
+
+## plots
+if (RUN$qualitative_analysis) {
+  ## open a pdf where to save plots (qualitative analysis)
+  if (!RSTUDIO) {
+    pdf(file = paste(path_images, name_test, "_qualitative_X_loadings.pdf", sep = ""), width = 10, height = 7)
+  }
+  
+  ## plot
+  labels_rows <- c("r1", "r2", "r3", "r4")
+  source(paste("tests/", test_suite, "/templates/plot_qualitative_results_X_loadings.R", sep = ""))
   
   ## close pdf (qualitative analysis)
   dev.off()

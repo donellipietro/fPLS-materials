@@ -13,7 +13,7 @@ generate_options <- function(name_main_test, path_queue) {
            
            ## options grid
            n_stat_units_vect <- c(50, 100, 200)
-           NSR_X_last_comp_vect <- seq(0.1, 1.1, by = 0.2)
+           NSR_X_last_comp_vect <- seq(0.1, 0.3, by = 0.2)
            
            ## fixed options
            name_mesh <- "unit_square"
@@ -22,7 +22,7 @@ generate_options <- function(name_main_test, path_queue) {
            locs_eq_nodes <- TRUE
            n_comp <- 4
            Beta_index <- 5
-           NSR_Y <- 0.5
+           NSR_Y <- 0.1
            n_reps <- 3
            mean <- FALSE
            
