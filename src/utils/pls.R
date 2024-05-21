@@ -1,4 +1,4 @@
-PLS <- function(Y, X, n_comp = 4, center = TRUE, mode = "PLS-R"){
+PLS <- function(Y, X, n_comp = 4, center = TRUE, mode = "PLS-R") {
   
   if (mode != "PLS-A" & mode != "PLS-SB" & mode != "PLS-R") {
     stop("Error: mode must be either 'PLS-A', 'PLS-SB', or 'PLS-R'")
@@ -25,18 +25,17 @@ PLS <- function(Y, X, n_comp = 4, center = TRUE, mode = "PLS-R"){
   S <- ncol(X_c) #S
   
   #X and Y directions
-  W <- matrix(0, nrow = S, ncol = n_comp)
-  V <- matrix(0, nrow = L, ncol = n_comp)
+  X_space_directions <- matrix(0, nrow = S, ncol = n_comp)
+  Y_space_directions <- matrix(0, nrow = L, ncol = n_comp)
   #X and Y scores/components
-  T <- matrix(0, nrow = N, ncol = n_comp)
-  U <- matrix(0, nrow = N, ncol = n_comp)
+  X_latent_scores <- matrix(0, nrow = N, ncol = n_comp)
+  Y_latent_scores <- matrix(0, nrow = N, ncol = n_comp)
   #X and Y loadings
-  P <- matrix(0, nrow = S, ncol = n_comp)
-  Q <- matrix(0, nrow = L, ncol = n_comp)
+  X_loadings <- matrix(0, nrow = S, ncol = n_comp)
+  Y_loadings <- matrix(0, nrow = L, ncol = n_comp)
   
   #B matrix
   B <- matrix(0, nrow = n_comp, ncol = n_comp)
-  Beta <- list()
   
   # Mean values in matrix form
   X_MEAN = matrix(X_mean, nrow = N, ncol = S, byrow = TRUE)
@@ -57,7 +56,6 @@ PLS <- function(Y, X, n_comp = 4, center = TRUE, mode = "PLS-R"){
   X_hat <- list()
   Beta_hat <- list()
   
-  
   #### Main loop  ####
   
   for(h in 1:n_comp){
@@ -67,39 +65,41 @@ PLS <- function(Y, X, n_comp = 4, center = TRUE, mode = "PLS-R"){
     #Weight extraction
     C.YX <- t(FF) %*% EE
     SVD <- svd(C.YX, nu = 1, nv = 1)
-    W[,h] <- SVD$v  
-    V[,h] <- SVD$u 
+    X_space_directions[,h] <- SVD$v  
+    Y_space_directions[,h] <- SVD$u 
     
     #Score/component computation
-    T[,h] <- EE %*% W[,h] 
-    U[,h] <- FF %*% V[,h] 
+    X_latent_scores[,h] <- EE %*% X_space_directions[,h] 
+    Y_latent_scores[,h] <- FF %*% Y_space_directions[,h] 
     
 
     ### Step 2-3: Loading computation  ### 
     
     #Loading computation
-    if(mode=="PLS-SB"){
+    tt = sum(X_latent_scores[,h]^2)
+    uu = sum(Y_latent_scores[,h]^2)
+    X_loadings[,h] <- t(EE) %*% X_latent_scores[,h] / (tt)
+    if(mode == "PLS-R") {
+      Y_loadings[,h] <- t(FF) %*% X_latent_scores[,h] / (tt)
+    } else if(mode == "PLS-A") {
+      Y_loadings[,h] <- t(FF) %*% Y_latent_scores[,h] / (uu)
+    } else if(mode == "PLS-SB") {
       # Loadings are set to be the directions
-      P[,h]<-W[,h] 
-      Q[,h]<-V[,h] 
-    }else{
-      tt = sum(T[,h]^2)
-      uu = sum(U[,h]^2)
-      P[,h] <- t(EE) %*% T[,h] / (tt)
-      Q[,h] <- t(FF) %*% U[,h] / (uu)
+      X_loadings[,h] <- X_space_directions[,h] 
+      Y_loadings[,h] <- Y_space_directions[,h] 
     }
     
     ### Step 4: Regression (only in PLS_12) + Deflation    ### 
     
     #X-deflation
-    EE <- EE - T[,h] %*% t(P[,h])
+    EE <- EE - X_latent_scores[,h] %*% t(X_loadings[,h])
     
     #Y-deflation
     if(mode=="PLS-R"){
-      B[h,h] <- t(U[,h]) %*% T[,h] / (tt) 
-      ## FF <- FF - B[h,h] * T[,h] %*% t(V[,h])
+      B[h,h] <- t(Y_latent_scores[,h]) %*% X_latent_scores[,h] / (tt) 
+      FF <- FF - X_latent_scores[,h] %*% (B[h,h] * t(Y_space_directions[,h]))
     }else{
-      FF <- FF - U[,h]%*% t(Q[,h])  
+      FF <- FF - Y_latent_scores[,h] %*% t(Y_loadings[,h])  
     }
     
     # Saving intermediate results
@@ -107,26 +107,28 @@ PLS <- function(Y, X, n_comp = 4, center = TRUE, mode = "PLS-R"){
     YY[[h+1]] = FF
     
     #X estimate
-    X_hat[[h]] <- T[,1:h] %*% t(P[,1:h]) + X_MEAN
+    X_hat[[h]] <- X_latent_scores[,1:h] %*% t(X_loadings[,1:h]) + X_MEAN
     
     #Y (and Beta) estimates
     if(mode == "PLS-R"){
-      Beta[[h]] <- W[,1:h] %*% solve(t(P[,1:h]) %*% W[,1:h] , B[1:h,1:h] %*% t(V[,1:h]))
-      Y_hat[[h]] <- X_c %*% Beta[[h]] + Y_MEAN
+      W_h <- X_space_directions[,1:h]
+      R_h <- X_loadings[,1:h]
+      V_h <- Y_space_directions[,1:h]
+      Beta_hat[[h]] <- W_h %*% solve(t(R_h) %*% W_h , B[1:h,1:h] %*% t(V_h))
+      Y_hat[[h]] <- X_c %*% Beta_hat[[h]] + Y_MEAN
     }else{
-      Y_hat[[h]] <- U[,1:h] %*% t(Q[,1:h]) + Y_MEAN
+      Y_hat[[h]] <- Y_latent_scores[,1:h] %*% t(Y_loadings[,1:h]) + Y_MEAN
     }
-    
   }
   
-  return(list(X_space_directions = W,
-              Y_space_directions = V,
-              X_latent_scores = T,
-              Y_latent_scores = U,
-              X_loadings = P,
-              Y_loadings = Q,
+  return(list(X_space_directions = X_space_directions,
+              Y_space_directions = Y_space_directions,
+              X_latent_scores = X_latent_scores,
+              Y_latent_scores = Y_latent_scores,
+              X_loadings = X_loadings,
+              Y_loadings = Y_loadings,
               B = B,
-              Beta = Beta,
+              Beta_hat = Beta_hat,
               X_mean = X_mean,
               Y_mean = Y_mean,
               Y_hat = Y_hat,

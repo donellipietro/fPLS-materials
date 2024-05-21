@@ -65,14 +65,13 @@ mode <- "PLS-R"
 name_mesh <- "unit_square"
 Beta_index <- 5
 n_comp <- 4
-sd_scores <- c(1, 0.8, 0.6, 0.5)
+sd_comp <- c(1, 0.8, 0.6, 0.4)
 
 
 ## generation accuracy parameters ----
-n_nodes <- 50^2
-n_stat_units <- 1000
-seed <- 0
-
+n_nodes <- 30^2
+n_samples <- 10000
+seed <- 142
 
 ## domain & locations ----
 
@@ -95,19 +94,19 @@ n_nodes <- nrow(nodes)
 X_loadings_true <- matrix(0, nrow = n_nodes, ncol = n_comp)
 for (i in 1:n_comp) {
   X_loadings_true[, i] <- comp_sin(nodes, i)
-  norm <- 1 # RMSE(X_loadings_true[, i])
-  X_loadings_true[, i] <- X_loadings_true[, i] / norm
+  X_loadings_true[, i] <- X_loadings_true[, i]
 }
+
+apply(X_loadings_true,2,var)
 
 ## computing the scores sd. (sigma)
 ## sd = sqrt(Var[score*loading]) = sqrt(Var[score] * semi_range(loading)^2) = sqrt(Var[score]) * semi_range(loading)
 ## sigma = sqrt(Var[score])
 ## => sigma = sd / semi_range(loading)
-sd_s <- c(1, 0.8, 0.3, 0.2)
+
 semi_range_X_loadings_true <- 0.5 * (apply(X_loadings_true, 2, max) - apply(X_loadings_true, 2, min))
-sigma_s <- sd_s / semi_range_X_loadings_true
-
-
+sigma_s <- sd_comp / semi_range_X_loadings_true
+sigma_s
 ## Y loadings ----
 
 if(Beta_index == 1)
@@ -140,7 +139,7 @@ n_resp <- nrow(Y_loadings_true)
 ## Sampling ----
 
 set.seed(seed)
-Sampled <- mvrnorm(10000, mu = rep(0, n_comp), diag(c(sigma_s^2)))
+Sampled <- mvrnorm(n_samples, mu = rep(0, n_comp), diag(c(sigma_s^2)))
 scores_true <- scale(Sampled, scale = FALSE)
 
 
@@ -152,38 +151,52 @@ Y_true <- scores_true %*% t(Y_loadings_true)
 
 ## PLS ----
 
-expected_results <- PLS(Y_true, X_true, n_comp = n_comp, mode = mode)
+expected_results <- PLS(Y_true, X_true, n_comp = n_comp, center = FALSE, mode = mode)
 
+## check data reconstruction
+norm(X_true - expected_results$X_hat_locs[[4]], "I")
+norm(Y_true - expected_results$Y_hat[[4]], "I")
 
 ## save results ----
 
-grid <- nodes
+X_true <- expected_results$X_hat_locs[[4]]
+Y_true <- expected_results$Y_hat[[4]]
+
 X_space_directions_true_grid <- expected_results$X_space_directions
 Y_space_directions_true <- expected_results$Y_space_directions
 X_loadings_true_grid <- expected_results$X_loadings
 Y_loadings_true <- expected_results$Y_loadings
-Beta_true_grid <- expected_results$Beta
 
-sd_X_latent_scores <- sqrt(diag(cov(expected_results$X_latent_scores)))
-sd_X_latent_scores/sd_X_latent_scores[1]
+if(mode=="PLS-R"){
+  Beta_true_grid <- expected_results$Beta_hat[[n_comp]]
+}else{
+  Beta_true_grid <- NULL
+}
+
+
+X_latent_scores_true_all <- expected_results$X_latent_scores
+Y_latent_scores_true_all <- expected_results$Y_latent_scores
 
 grid <- mesh
 
-expected_results$Y_loadings
-
-save(## data options
-     mode,
-     name_mesh,
-     Beta_index,
-     n_comp,
-     ## generated data
-     grid,
-     X_space_directions_true_grid,
-     Y_space_directions_true,
-     X_loadings_true_grid,
-     Y_loadings_true,
-     sd_X_latent_scores,
-     Beta_true_grid,
-     ## file
-     file = paste(path_data, paste(mode, name_mesh, "b", Beta_index, "comp", n_comp, sep = "_"), ".RData", sep = "")
+save(
+  # data options
+  mode,
+  name_mesh,
+  Beta_index,
+  n_comp,
+  ## generated data
+  grid,
+  Y_true,
+  X_true,
+  X_space_directions_true_grid,
+  Y_space_directions_true,
+  X_loadings_true_grid,
+  Y_loadings_true,
+  X_latent_scores_true_all,
+  Y_latent_scores_true_all,
+  Beta_true_grid,
+  ## file
+  file = paste(path_data, paste(mode, name_mesh, "b", Beta_index, "comp", n_comp, sep = "_"), ".RData", sep = "")
 )
+

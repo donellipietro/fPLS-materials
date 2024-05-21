@@ -123,7 +123,7 @@ ColMean_wrapped <- function(data) {
 
 MV_PLS_wrapped <- function(data, n_comp = 4, center = TRUE, mode = "PLS-R"){
   
-  model_PLS <- PLS(data$Y, data$X, n_comp, center, mode = "PLS-R")
+  model_PLS <- PLS(data$Y, data$X, n_comp = n_comp, center = center, mode = mode)
   
   return(list(
     model = NULL,
@@ -149,7 +149,7 @@ MV_PLS_wrapped <- function(data, n_comp = 4, center = TRUE, mode = "PLS-R"){
       X_hat_locs = model_PLS$X_hat,
       X_hat = NULL,
       ## Beta
-      Beta_hat_locs = model_PLS$Beta,
+      Beta_hat_locs = model_PLS$Beta_hat,
       Beta_hat = NULL
     )
   ))
