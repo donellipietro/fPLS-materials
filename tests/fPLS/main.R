@@ -10,6 +10,8 @@ graphics.off()
 test_suite <- "fPLS"
 TEST_SUITE <- "fPLS"
 
+mode_MV <- "PLS-R"
+mode_fun <- "fPLS-R"
 
 # libraries ----
 
@@ -100,8 +102,8 @@ lambda_grid <- fdaPDE2::hyperparameters(10^seq(-9, 2, by = 0.1))
 colors <- c(brewer.pal(3, "Greys")[3], brewer.pal(3, "Blues")[2:3])
 
 ## names and labels
-names_models <- c("MV_PLS_R", "fPLS_R_off", "fPLS_R_gcv")
-lables_models <- c("MV-PLS-R", "fPLS-R (no calibration)", "fPLS-R (gcv calibration)")
+names_models <- c("MV_PLS", "fPLS_off", "fPLS_gcv")
+lables_models <- c("MV-PLS", "fPLS (no calibration)", "fPLS (gcv calibration)")
 
 ## resolution of the high resolution grid
 n_nodes_HR_grid <- 1000
@@ -198,23 +200,28 @@ if (RUN$tests) {
     file_model_vect <- paste(path_batch, "batch_", i, "_fitted_model_", names_models, ".RData", sep = "")
     if (any(!file.exists(file_model_vect)) || FORCE_FIT || FORCE_EVALUATE) {
       ## generate data
-      cat("- Data generation\n")
       generated_data <- generate_2D_data(
-        domain = domain,
+        ## true data identificator
+        mode_MV,     
+        name_mesh,
+        Beta_index,      
+        n_comp,
+        ## simulation setting
+        domain,
         locs = locations,
         n_stat_units = n_stat_units,
-        n_comp = n_comp,
-        seed = i,
-        NSR_last_comp = NSR_last_comp,
-        X_loadings_true_generator = loadings_true_generator,
-        mean_generator = ifelse(mean, log_mean_generator, function(locs) { return(locs[,1]*0) })
+        n_nodes = n_nodes,
+        NSR_X_last_comp = NSR_X_last_comp,
+        NSR_Y = NSR_Y,
+        seed = i
       )
       
       ## assembly functional data
-      data <- functional_data(
+      data <- functional_regression_data(
         domain = domain,
-        locations = locations,
-        X = generated_data$X
+        # locations = locations,
+        Y = generated_data$data$Y,
+        X = generated_data$data$X
       )
     }
     

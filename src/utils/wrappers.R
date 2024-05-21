@@ -120,3 +120,38 @@ ColMean_wrapped <- function(data) {
   ))
 }
 
+
+MV_PLS_wrapped <- function(data, n_comp = 4, center = TRUE, mode = "PLS-R"){
+  
+  model_PLS <- PLS(data$Y, data$X, n_comp, center, mode = "PLS-R")
+  
+  return(list(
+    model = NULL,
+    MODE = mode,
+    results = list(
+      ## centering
+      Y_mean = model_PLS$Y_mean,
+      X_mean_locs = model_PLS$X_mean,
+      X_mean = NULL,
+      ## space directions
+      Y_space_directions = model_PLS$Y_space_directions,
+      X_space_directions_locs = model_PLS$X_space_directions,
+      X_space_directions = NULL,
+      ## latent scores
+      Y_latent_scores = model_PLS$Y_latent_scores,
+      X_latent_scores = model_PLS$X_latent_scores,
+      ## loadings
+      Y_loadings = model_PLS$Y_loadings,
+      X_loadings_locs = model_PLS$X_loadings,
+      X_loadings = NULL,
+      ## reconstruction
+      Y_hat = model_PLS$Y_hat,
+      X_hat_locs = model_PLS$X_hat,
+      X_hat = NULL,
+      ## Beta
+      Beta_hat_locs = model_PLS$Beta,
+      Beta_hat = NULL
+    )
+  ))
+}
+

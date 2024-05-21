@@ -3,7 +3,7 @@
 generate_2D_data <- function(
     
   ## true data identificator
-  pls_mode,     
+  mode,     
   name_mesh,
   Beta_index,      
   n_comp,
@@ -16,11 +16,10 @@ generate_2D_data <- function(
   NSR_X_last_comp = 0.5,
   NSR_Y = 0.5,
   seed = 0,
-  MODE = "PLS-R",
   VERBOSE = FALSE) {
   
   ## load true data
-  path_true_data <- paste("data/fPLS/", paste(pls_mode, name_mesh, "b", Beta_index, "comp", n_comp, sep = "_"), ".RData", sep = "")
+  path_true_data <- paste("data/fPLS/", paste(mode, name_mesh, "b", Beta_index, "comp", n_comp, sep = "_"), ".RData", sep = "")
   load(path_true_data)
   
   ## set defaults
@@ -43,8 +42,6 @@ generate_2D_data <- function(
   X_loadings_true_locs <- matrix(0, nrow = n_locs, ncol = n_comp)
   X_space_directions_true <- matrix(0, nrow = n_nodes, ncol = n_comp)
   X_space_directions_true_locs <- matrix(0, nrow = n_locs, ncol = n_comp)
-  Beta_true <- matrix(0, nrow = n_nodes, ncol = n_resp)
-  Beta_true_locs <- matrix(0, nrow = n_locs, ncol = n_resp)
   for (i in 1:n_comp) {
     ## space directions evaluation
     X_space_directions_true_locs[, i] <- evaluate_field(locs, X_space_directions_true_grid[, i], grid)
@@ -58,16 +55,18 @@ generate_2D_data <- function(
     
     ## consequent normalizations
     sd_X_latent_scores[i] <- sd_X_latent_scores[i] / norm_locs
-    if(MODE == "PLS_R") {
+    if(mode == "PLS-R") {
       Y_loadings_true[, i] <- Y_loadings_true[, i] * norm_locs
     }
   }
   
-  ## beta evaluation
-  if(MODE == "PLS_R") {
+  ## Beta evaluation
+  if(mode == "PLS-R") {
+    Beta_true <- matrix(0, nrow = n_nodes, ncol = n_resp)
+    Beta_true_locs <- matrix(0, nrow = n_locs, ncol = n_resp)
     for(i in 1:n_resp) {
-      Beta_true_locs[, i] <- evaluate_field(locs, Beta_true_grid[, i], grid)
-      Beta_true[, i] <- evaluate_field(nodes, Beta_true_grid[, i], grid)
+      Beta_true_locs[, i] <- evaluate_field(locs, Beta_true_grid[[n_comp]][, i], grid)
+      Beta_true[, i] <- evaluate_field(nodes, Beta_true_grid[[n_comp]][, i], grid)
     }
   }
   
@@ -89,7 +88,7 @@ generate_2D_data <- function(
   NSR_X <- NSR_X_last_comp * min(sd_comp^2) / sum(sd_comp^2)
   
   if (VERBOSE) {
-    cat("\n\n# Computing the noise sd. (sigma_noise) for X")
+    cat("\n\n# Computing the noise sd. (sigma_noise) for X")
     cat("\nNSR_X_last_comp = Var[noise]/Var[3rd comp.]")
     cat("\nVar[3rd comp.] = Var[score_3 * X_loadings_3] = sd_s_3^2")
     cat("\n=> Var[noise] = NSR_X_last_comp * Var[3rd comp.] = NSR_X_last_comp * sd_s_3^2")
@@ -107,7 +106,7 @@ generate_2D_data <- function(
   sigma_noise_y <- sqrt(NSR_Y) * as.numeric(sqrt(Y_loadings_true^2 %*% sd_X_latent_scores^2))
   
   if (VERBOSE) {
-    cat("\n\n# Computing the noise sd. (sigma_noise) for Y")
+    cat("\n\n# Computing the noise sd. (sigma_noise) for Y")
     cat(paste("\n- Desired Noise to Signal Ratio:", NSR_Y))
     cat(paste("\n- Effective noise sd:", sigma_noise_y))
     cat("\n")
@@ -177,10 +176,10 @@ generate_2D_data <- function(
     X_loadings_true_locs = X_loadings_true_locs,
     Y_loadings_true = Y_loadings_true,
     ## latent scores
-    X_latent_scores_true = X_latent_scores_true
-    # Y_latent_scores_true = Y_latent_scores_true
+    X_latent_scores_true = X_latent_scores_true,
+    Y_latent_scores_true = X_latent_scores_true
   )
-  if(MODE == "PLS_R") {
+  if(mode == "PLS-R") {
     expected_results$Beta <- Beta_true
     expected_results$Beta_locs <- Beta_true_locs
   }

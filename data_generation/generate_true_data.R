@@ -61,7 +61,7 @@ mkdir(path_data)
 
 
 ## data options ----
-pls_mode <- "PLS-R"
+mode <- "PLS-R"
 name_mesh <- "unit_square"
 Beta_index <- 5
 n_comp <- 4
@@ -152,19 +152,19 @@ Y_true <- scores_true %*% t(Y_loadings_true)
 
 ## PLS ----
 
-expected_results <- PLS(Y_true, X_true, n_comp = n_comp, MODE = pls_mode)
+expected_results <- PLS(Y_true, X_true, n_comp = n_comp, mode = mode)
 
 
 ## save results ----
 
 grid <- nodes
-X_space_directions_true_grid <- expected_results$X_space_directions_locs
+X_space_directions_true_grid <- expected_results$X_space_directions
 Y_space_directions_true <- expected_results$Y_space_directions
-X_loadings_true_grid <- expected_results$X_loadings_locs
+X_loadings_true_grid <- expected_results$X_loadings
 Y_loadings_true <- expected_results$Y_loadings
-Beta_true_grid <- expected_results$Beta_locs
+Beta_true_grid <- expected_results$Beta
 
-sd_X_latent_scores <- diag(cov(expected_results$X_latent_scores))
+sd_X_latent_scores <- sqrt(diag(cov(expected_results$X_latent_scores)))
 sd_X_latent_scores/sd_X_latent_scores[1]
 
 grid <- mesh
@@ -172,7 +172,7 @@ grid <- mesh
 expected_results$Y_loadings
 
 save(## data options
-     pls_mode,
+     mode,
      name_mesh,
      Beta_index,
      n_comp,
@@ -185,5 +185,5 @@ save(## data options
      sd_X_latent_scores,
      Beta_true_grid,
      ## file
-     file = paste(path_data, paste(pls_mode, name_mesh, "b", Beta_index, "comp", n_comp, sep = "_"), ".RData", sep = "")
+     file = paste(path_data, paste(mode, name_mesh, "b", Beta_index, "comp", n_comp, sep = "_"), ".RData", sep = "")
 )

@@ -1,9 +1,7 @@
-#Copiato da file pietro
-
-PLS <- function(Y, X, n_comp = 4, center = TRUE, MODE = "PLS-R"){
+PLS <- function(Y, X, n_comp = 4, center = TRUE, mode = "PLS-R"){
   
-  if (MODE != "PLS-A" & MODE != "PLS-SB" & MODE != "PLS-R") {
-    stop("Error: MODE must be either 'PLS-A', 'PLS-SB', or 'PLS-R'")
+  if (mode != "PLS-A" & mode != "PLS-SB" & mode != "PLS-R") {
+    stop("Error: mode must be either 'PLS-A', 'PLS-SB', or 'PLS-R'")
   }
   
   #### Initialization  ####
@@ -80,7 +78,7 @@ PLS <- function(Y, X, n_comp = 4, center = TRUE, MODE = "PLS-R"){
     ### Step 2-3: Loading computation  ### 
     
     #Loading computation
-    if(MODE=="PLS-SB"){
+    if(mode=="PLS-SB"){
       # Loadings are set to be the directions
       P[,h]<-W[,h] 
       Q[,h]<-V[,h] 
@@ -97,7 +95,7 @@ PLS <- function(Y, X, n_comp = 4, center = TRUE, MODE = "PLS-R"){
     EE <- EE - T[,h] %*% t(P[,h])
     
     #Y-deflation
-    if(MODE=="PLS-R"){
+    if(mode=="PLS-R"){
       B[h,h] <- t(U[,h]) %*% T[,h] / (tt) 
       ## FF <- FF - B[h,h] * T[,h] %*% t(V[,h])
     }else{
@@ -112,7 +110,7 @@ PLS <- function(Y, X, n_comp = 4, center = TRUE, MODE = "PLS-R"){
     X_hat[[h]] <- T[,1:h] %*% t(P[,1:h]) + X_MEAN
     
     #Y (and Beta) estimates
-    if(MODE == "PLS-R"){
+    if(mode == "PLS-R"){
       Beta[[h]] <- W[,1:h] %*% solve(t(P[,1:h]) %*% W[,1:h] , B[1:h,1:h] %*% t(V[,1:h]))
       Y_hat[[h]] <- X_c %*% Beta[[h]] + Y_MEAN
     }else{
@@ -121,15 +119,15 @@ PLS <- function(Y, X, n_comp = 4, center = TRUE, MODE = "PLS-R"){
     
   }
   
-  return(list(X_space_directions_locs = W,
+  return(list(X_space_directions = W,
               Y_space_directions = V,
               X_latent_scores = T,
               Y_latent_scores = U,
-              X_loadings_locs = P,
+              X_loadings = P,
               Y_loadings = Q,
               B = B,
-              Beta_locs = Beta,
-              X_mean_locs = X_mean,
+              Beta = Beta,
+              X_mean = X_mean,
               Y_mean = Y_mean,
               Y_hat = Y_hat,
               X_hat_locs = X_hat))

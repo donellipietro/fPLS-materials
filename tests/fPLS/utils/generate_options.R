@@ -21,7 +21,7 @@ generate_options <- function(name_main_test, path_queue) {
            n_nodes <- 30^2
            locs_eq_nodes <- TRUE
            n_comp <- 4
-           B.index <- 1
+           Beta_index <- 5
            NSR_Y <- 0.5
            n_reps <- 3
            mean <- FALSE
@@ -35,7 +35,7 @@ generate_options <- function(name_main_test, path_queue) {
                  sprintf("%0*d", 4, n_nodes),
                  sprintf("%0*d", 4, n_nodes), ## locations = nodes
                  sprintf("%0*d", 4, n_stat_units),
-                 B.index,
+                 Beta_index,
                  NSR_X_last_comp, NSR_Y, n_comp,
                  sep = "_"
                )
@@ -56,7 +56,7 @@ generate_options <- function(name_main_test, path_queue) {
                  data = list(
                    mean = mean,
                    locs_eq_nodes = locs_eq_nodes,
-                   B.index = B.index
+                   Beta_index = Beta_index
                  ),
                  noise = list(
                    NSR_X_last_comp = NSR_X_last_comp,
@@ -82,7 +82,7 @@ generate_options <- function(name_main_test, path_queue) {
            n_nodes <- 30^2
            locs_eq_nodes <- FALSE
            n_comp <- 4
-           B.index <- 1
+           Beta_index <- 5
            NSR_Y <- 0.5
            n_reps <- 3
            mean <- FALSE
@@ -96,6 +96,7 @@ generate_options <- function(name_main_test, path_queue) {
                    sprintf("%0*d", 4, n_nodes),
                    sprintf("%0*d", 4, n_locs),
                    sprintf("%0*d", 4, n_stat_units),
+                   Beta_index,
                    NSR_X_last_comp, NSR_Y, n_comp,
                    sep = "_"
                  )
@@ -116,7 +117,7 @@ generate_options <- function(name_main_test, path_queue) {
                    data = list(
                      mean = mean,
                      locs_eq_nodes = locs_eq_nodes,
-                     B.index = B.index
+                     Beta_index = Beta_index
                    ),
                    noise = list(
                      NSR_X_last_comp = NSR_X_last_comp,
