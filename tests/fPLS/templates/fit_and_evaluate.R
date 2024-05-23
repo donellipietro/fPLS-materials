@@ -10,7 +10,7 @@ if (file.exists(paste(path_batch, "batch_", i, "_results_evaluation.RData", sep 
 }
 
 
-### Molde MV-PLS ----
+### Model MV-PLS ----
 model_MV_PLS <- NULL
 file_model <- paste(path_batch, "batch_", i, "_fitted_model_MV_PLS.RData", sep = "")
 if (file.exists(file_model) && !FORCE_FIT) {
@@ -168,4 +168,4 @@ save(
 if("generated_data" %in% ls()) rm(generated_data)
 rm(results_evaluation)
 
-cat(paste("- Batch", i, "compleated.\n"))
+cat(paste("- Batch", i, "completed.\n"))
