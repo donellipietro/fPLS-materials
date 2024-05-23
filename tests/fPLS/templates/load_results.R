@@ -69,9 +69,6 @@ if(RUN$qualitative_analysis) {
   X_loadings <- list()
   X_loadings_locs <- list()
   X_loadings_HR <- list()
-  
-  ##------>NEW
-  #Room for results (altrimenti restituisce lista vuota)
   Betas <- list()
   Betas_locs <- list()
   Betas_HR <- list()
@@ -146,23 +143,25 @@ if(RUN$qualitative_analysis) {
       X_loadings_true_HR[, h] <- X_loadings_true_HR[, h] * norm_locs
     }
     
-    ##---->NEW 
-    # Nota: forse non servono perchè a differenza di loadings e directions non 
-    # devono essere aggiustati
-    ## adjust Beta & X_loadings_true 
+    ## evaluate Betas
     if(mode=="PLS-R" || mode_fun=="fPLS-R"){
-      Betas_true_locs <- cbind(
-        evaluate_field(locations, Beta_true_grid[,1], mesh),
-        evaluate_field(locations, Beta_true_grid[,2], mesh)
-      )
-      Betas_true <- cbind(
-        evaluate_field(domain$nodes, Beta_true_grid[,1], mesh),
-        evaluate_field(domain$nodes, Beta_true_grid[,2], mesh)
-      )
-      Betas_true_HR <- cbind(
-        evaluate_field(grid_HR, Beta_true_grid[,1], mesh),
-        evaluate_field(grid_HR, Beta_true_grid[,2], mesh)
-      )
+      Betas_true_locs <- NULL
+      Betas_true <- NULL
+      Betas_true_HR <- NULL
+      for(l in 1:ncol(Beta_true_grid)) {
+        Betas_true_locs <- cbind(
+          Betas_true_locs,
+          evaluate_field(locations, Beta_true_grid[,l], mesh)
+        )
+        Betas_true <- cbind(
+          Betas_true,
+          evaluate_field(domain$nodes, Beta_true_grid[,l], mesh)
+        )
+        Betas_true_HR <- cbind(
+          Betas_true_HR,
+          evaluate_field(grid_HR, Beta_true_grid[,l], mesh)
+        )
+      }
     }
     
     ## directions, loadings & scores MV_PLS
@@ -179,29 +178,25 @@ if(RUN$qualitative_analysis) {
       model_MV_PLS$MODE
     )
     
-    ##------>NEW
     if(mode=="PLS-R"){
-      adjusted_results_MV_PLS$Beta_hats<-model_MV_PLS$results$Beta_hat #è null
+      adjusted_results_MV_PLS$Beta_hats <- model_MV_PLS$results$Beta_hat #è null
       
-      #Add the list of the two betas, eah list has the same structure of the loadings
-      adjusted_results_MV_PLS$Beta_hat_locs<-NULL
-      adjusted_results_MV_PLS$Beta_hat_locs[[1]]<-cbind(
-        model_MV_PLS$results$Beta_hat_locs[[1]][,1],
-        model_MV_PLS$results$Beta_hat_locs[[2]][,1],
-        model_MV_PLS$results$Beta_hat_locs[[3]][,1],
-        model_MV_PLS$results$Beta_hat_locs[[4]][,1]
-      )
-      adjusted_results_MV_PLS$Beta_hat_locs[[2]]<-cbind(
-        model_MV_PLS$results$Beta_hat_locs[[1]][,2],
-        model_MV_PLS$results$Beta_hat_locs[[2]][,2],
-        model_MV_PLS$results$Beta_hat_locs[[3]][,2],
-        model_MV_PLS$results$Beta_hat_locs[[4]][,2]
-      )   
-      adjusted_results_MV_PLS$Beta_evaluated_list<-NULL
+      # add the list of the two betas, eah list has the same structure of the loadings
+      adjusted_results_MV_PLS$Beta_hat_locs <- NULL
+
+      for(l in 1:ncol(Beta_true_grid)) {
+        adjusted_results_MV_PLS$Beta_hat_locs[[l]]<-cbind(
+          model_MV_PLS$results$Beta_hat_locs[[1]][,l],
+          model_MV_PLS$results$Beta_hat_locs[[2]][,l],
+          model_MV_PLS$results$Beta_hat_locs[[3]][,l],
+          model_MV_PLS$results$Beta_hat_locs[[4]][,l]
+        )
+      }
+      adjusted_results_MV_PLS$Beta_evaluated_list <- NULL
     }
     
     
-    ### Model_fPLS_off
+    ### model fPLS_off
     # adjust directions and loadings 
     model_fPLS_off <- evaluate_fPLS_at_locations(model_fPLS_off, n_comp, mean)
     model_fPLS_off_X_space_directions_HR <- cbind(
@@ -216,9 +211,7 @@ if(RUN$qualitative_analysis) {
       evaluate_field(grid_HR, model_fPLS_off$results$X_loadings[,3], mesh),
       evaluate_field(grid_HR, model_fPLS_off$results$X_loadings[,4], mesh)
     )
-    
-    
-    #Store directions and loadings in nodes and in HR grid in a list
+    # store directions and loadings in nodes and in HR grid in a list
     model_fPLS_off_X_space_directions_evaluated_list <- list(
       X_space_directions = model_fPLS_off$results$X_space_directions,
       X_space_directions_HR = model_fPLS_off_X_space_directions_HR
@@ -227,8 +220,7 @@ if(RUN$qualitative_analysis) {
       X_loadings = model_fPLS_off$results$X_loadings,
       X_loadings_HR = model_fPLS_off_X_loadings_HR
     )
-    
-
+    # adjust results
     adjusted_results_fPLS_off <- adjust_results(
       model_fPLS_off$results$Y_space_directions,
       Y_space_directions_true,
@@ -243,70 +235,51 @@ if(RUN$qualitative_analysis) {
       model_fPLS_off$MODE
     )
     
-    ##---->NEW
-    if(mode_fun=="fPLS-R"){
-      #Store beta at nodes and at HR grid nodes
-      model_fPLS_off_X_Betas<-NULL
-      model_fPLS_off_X_Betas[[1]] <- cbind(
-        model_fPLS_off$results$Beta_hat[[1]][,1],
-        model_fPLS_off$results$Beta_hat[[2]][,1],
-        model_fPLS_off$results$Beta_hat[[3]][,1],
-        model_fPLS_off$results$Beta_hat[[4]][,1]
-      )
-      model_fPLS_off_X_Betas[[2]] <- cbind(
-        model_fPLS_off$results$Beta_hat[[1]][,2],
-        model_fPLS_off$results$Beta_hat[[2]][,2],
-        model_fPLS_off$results$Beta_hat[[3]][,2],
-        model_fPLS_off$results$Beta_hat[[4]][,2]
-      )
-      model_fPLS_off_X_Betas_HR<-NULL
-      model_fPLS_off_X_Betas_HR[[1]] <- cbind(
-        evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[1]][,1], mesh),
-        evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[2]][,1], mesh),
-        evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[3]][,1], mesh),
-        evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[4]][,1], mesh)
-      )
-      model_fPLS_off_X_Betas_HR[[2]] <- cbind(
-        evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[1]][,2], mesh),
-        evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[2]][,2], mesh),
-        evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[3]][,2], mesh),
-        evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[4]][,2], mesh)
-      )
+    if(mode_fun == "fPLS-R"){
+      # store beta at nodes and at HR grid nodes
+      model_fPLS_off_Betas <- NULL
+      model_fPLS_off_Betas_HR <- NULL
+      for(l in 1:ncol(Beta_true_grid)) {
+        model_fPLS_off_Betas[[l]] <- cbind(
+          model_fPLS_off$results$Beta_hat[[1]][,l],
+          model_fPLS_off$results$Beta_hat[[2]][,l],
+          model_fPLS_off$results$Beta_hat[[3]][,l],
+          model_fPLS_off$results$Beta_hat[[4]][,l]
+        )
+        model_fPLS_off_Betas_HR[[l]] <- cbind(
+          evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[1]][,l], mesh),
+          evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[2]][,l], mesh),
+          evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[3]][,l], mesh),
+          evaluate_field(grid_HR, model_fPLS_off$results$Beta_hat[[4]][,l], mesh)
+        )
+      }
       
-      #Store results in nodes and HR grid nodes in a list of 2 elements,
-      # one for each beta. Each element has the same structure as the 
-      #list for loadings and directions
-      adjusted_results_fPLS_off$Betas_loadings_evaluated_list<-NULL
-      adjusted_results_fPLS_off$Betas_loadings_evaluated_list[[1]]<-list(
-        Betas=model_fPLS_off_X_Betas[[1]],
-        Betas_HR=model_fPLS_off_X_Betas_HR[[1]]
-      )
-      adjusted_results_fPLS_off$Betas_loadings_evaluated_list[[2]]<-list(
-        Betas=model_fPLS_off_X_Betas[[2]],
-        Betas_HR=model_fPLS_off_X_Betas_HR[[2]]
-      )
+      # Store results in nodes and HR grid nodes in a list of 2 elements,
+      # one for each beta. Each element has the same structure as the list for loadings and directions
+      adjusted_results_fPLS_off$Betas_loadings_evaluated_list <- NULL
+      for(l in 1:ncol(Beta_true_grid)) {
+        adjusted_results_fPLS_off$Betas_loadings_evaluated_list[[l]] <- list(
+          Betas=model_fPLS_off_Betas[[l]],
+          Betas_HR=model_fPLS_off_Betas_HR[[l]]
+        )
+      }
       
       # Add beta locs to adjusted resuts
-      # As a list of 2. Each element is 
-      # a px4 matrix,  like loadings and directions
-      adjusted_results_fPLS_off$Beta_hat_locs<-NULL
-      adjusted_results_fPLS_off$Beta_hat_locs[[1]]<-cbind(
-        model_fPLS_off$results$Beta_hat_locs[[1]][,1],
-        model_fPLS_off$results$Beta_hat_locs[[2]][,1],
-        model_fPLS_off$results$Beta_hat_locs[[3]][,1],
-        model_fPLS_off$results$Beta_hat_locs[[4]][,1]
-      )
-      adjusted_results_fPLS_off$Beta_hat_locs[[2]]<-cbind(
-        model_fPLS_off$results$Beta_hat_locs[[1]][,2],
-        model_fPLS_off$results$Beta_hat_locs[[2]][,2],
-        model_fPLS_off$results$Beta_hat_locs[[3]][,2],
-        model_fPLS_off$results$Beta_hat_locs[[4]][,2]
-      )
+      # As a list of 2. Each element is  a px4 matrix, like loadings and directions
+      adjusted_results_fPLS_off$Beta_hat_locs <- NULL
+      for(l in 1:ncol(Beta_true_grid)) {
+        adjusted_results_fPLS_off$Beta_hat_locs[[l]] <- cbind(
+          model_fPLS_off$results$Beta_hat_locs[[1]][,l],
+          model_fPLS_off$results$Beta_hat_locs[[2]][,l],
+          model_fPLS_off$results$Beta_hat_locs[[3]][,l],
+          model_fPLS_off$results$Beta_hat_locs[[4]][,l]
+        )
+      }
     }
 
     
-    ### Model fPLS_gcv
-    ##### adjust directions and loadings 
+    ## model fPLS_gcv
+    # adjust directions and loadings 
     model_fPLS_gcv <- evaluate_fPLS_at_locations(model_fPLS_gcv, n_comp, mean)
     model_fPLS_gcv_X_space_directions_HR <- cbind(
       evaluate_field(grid_HR, model_fPLS_gcv$results$X_space_directions[,1], mesh),
@@ -320,6 +293,7 @@ if(RUN$qualitative_analysis) {
       evaluate_field(grid_HR, model_fPLS_gcv$results$X_loadings[,3], mesh),
       evaluate_field(grid_HR, model_fPLS_gcv$results$X_loadings[,4], mesh)
     )
+    # store directions and loadings in nodes and in HR grid in a list
     model_fPLS_gcv_X_space_directions_evaluated_list <- list(
       X_space_directions = model_fPLS_gcv$results$X_space_directions,
       X_space_directions_HR = model_fPLS_gcv_X_space_directions_HR
@@ -328,7 +302,7 @@ if(RUN$qualitative_analysis) {
       X_loadings = model_fPLS_gcv$results$X_loadings,
       X_loadings_HR = model_fPLS_gcv_X_loadings_HR
     )
-    
+    # adjust results
     adjusted_results_fPLS_gcv <- adjust_results(
       model_fPLS_gcv$results$Y_space_directions,
       Y_space_directions_true,
@@ -343,68 +317,49 @@ if(RUN$qualitative_analysis) {
       model_fPLS_gcv$MODE
     )
     
-    ##---->NEW
-    if(mode_fun=="fPLS-R"){
-      #Store beta at nodes and at HR grid nodes
-      model_fPLS_gcv_X_Betas<-NULL
-      model_fPLS_gcv_X_Betas[[1]] <- cbind(
-        model_fPLS_gcv$results$Beta_hat[[1]][,1],
-        model_fPLS_gcv$results$Beta_hat[[2]][,1],
-        model_fPLS_gcv$results$Beta_hat[[3]][,1],
-        model_fPLS_gcv$results$Beta_hat[[4]][,1]
-      )
-      model_fPLS_gcv_X_Betas[[2]] <- cbind(
-        model_fPLS_gcv$results$Beta_hat[[1]][,2],
-        model_fPLS_gcv$results$Beta_hat[[2]][,2],
-        model_fPLS_gcv$results$Beta_hat[[3]][,2],
-        model_fPLS_gcv$results$Beta_hat[[4]][,2]
-      )
-      model_fPLS_gcv_X_Betas_HR<-NULL
-      model_fPLS_gcv_X_Betas_HR[[1]] <- cbind(
-        evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[1]][,1], mesh),
-        evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[2]][,1], mesh),
-        evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[3]][,1], mesh),
-        evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[4]][,1], mesh)
-      )
-      model_fPLS_gcv_X_Betas_HR[[2]] <- cbind(
-        evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[1]][,2], mesh),
-        evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[2]][,2], mesh),
-        evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[3]][,2], mesh),
-        evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[4]][,2], mesh)
-      )
+    if(mode_fun == "fPLS-R"){
+      # store beta at nodes and at HR grid nodes
+      model_fPLS_gcv_Betas <- NULL
+      model_fPLS_gcv_Betas_HR <- NULL
+      for(l in 1:ncol(Beta_true_grid)) {
+        model_fPLS_gcv_Betas[[l]] <- cbind(
+          model_fPLS_gcv$results$Beta_hat[[1]][,l],
+          model_fPLS_gcv$results$Beta_hat[[2]][,l],
+          model_fPLS_gcv$results$Beta_hat[[3]][,l],
+          model_fPLS_gcv$results$Beta_hat[[4]][,l]
+        )
+        model_fPLS_gcv_Betas_HR[[l]] <- cbind(
+          evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[1]][,l], mesh),
+          evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[2]][,l], mesh),
+          evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[3]][,l], mesh),
+          evaluate_field(grid_HR, model_fPLS_gcv$results$Beta_hat[[4]][,l], mesh)
+        )
+      }
       
-      #Store results in nodes and HR grid nodes in a list of 2 elements,
-      # one for each beta. Each element has the same structure as the 
-      #list for loadings and directions
-      adjusted_results_fPLS_gcv$Betas_loadings_evaluated_list<-NULL
-      adjusted_results_fPLS_gcv$Betas_loadings_evaluated_list[[1]]<-list(
-        Betas=model_fPLS_gcv_X_Betas[[1]],
-        Betas_HR=model_fPLS_gcv_X_Betas_HR[[1]]
-      )
-      adjusted_results_fPLS_gcv$Betas_loadings_evaluated_list[[2]]<-list(
-        Betas=model_fPLS_gcv_X_Betas[[2]],
-        Betas_HR=model_fPLS_gcv_X_Betas_HR[[2]]
-      )
+      # Store results in nodes and HR grid nodes in a list of 2 elements,
+      # one for each beta. Each element has the same structure as the list for loadings and directions
+      adjusted_results_fPLS_gcv$Betas_loadings_evaluated_list <- NULL
+      for(l in 1:ncol(Beta_true_grid)) {
+        adjusted_results_fPLS_gcv$Betas_loadings_evaluated_list[[l]] <- list(
+          Betas=model_fPLS_gcv_Betas[[l]],
+          Betas_HR=model_fPLS_gcv_Betas_HR[[l]]
+        )
+      }
       
       # Add beta locs to adjusted resuts
-      # As a list of 2. Each element is 
-      # a px4 matrix,  like loadings and directions
-      adjusted_results_fPLS_gcv$Beta_hat_locs<-NULL
-      adjusted_results_fPLS_gcv$Beta_hat_locs[[1]]<-cbind(
-        model_fPLS_gcv$results$Beta_hat_locs[[1]][,1],
-        model_fPLS_gcv$results$Beta_hat_locs[[2]][,1],
-        model_fPLS_gcv$results$Beta_hat_locs[[3]][,1],
-        model_fPLS_gcv$results$Beta_hat_locs[[4]][,1]
-      )
-      adjusted_results_fPLS_gcv$Beta_hat_locs[[2]]<-cbind(
-        model_fPLS_gcv$results$Beta_hat_locs[[1]][,2],
-        model_fPLS_gcv$results$Beta_hat_locs[[2]][,2],
-        model_fPLS_gcv$results$Beta_hat_locs[[3]][,2],
-        model_fPLS_gcv$results$Beta_hat_locs[[4]][,2]
-      )
+      # As a list of 2. Each element is  a px4 matrix, like loadings and directions
+      adjusted_results_fPLS_gcv$Beta_hat_locs <- NULL
+      for(l in 1:ncol(Beta_true_grid)) {
+        adjusted_results_fPLS_gcv$Beta_hat_locs[[l]] <- cbind(
+          model_fPLS_gcv$results$Beta_hat_locs[[1]][,l],
+          model_fPLS_gcv$results$Beta_hat_locs[[2]][,l],
+          model_fPLS_gcv$results$Beta_hat_locs[[3]][,l],
+          model_fPLS_gcv$results$Beta_hat_locs[[4]][,l]
+        )
+      }
     }
     
-    ###Saving results
+    ## Saving results
     
     ## save adjusted directions at locations
     X_space_directions_locs$MV_PLS[[i]] <- adjusted_results_MV_PLS$X_space_directions_locs
@@ -430,38 +385,36 @@ if(RUN$qualitative_analysis) {
     
     if(mode=="PLS-R"){
       ## save betas at locations
-      Betas_locs$MV_PLS[[i]]<-list()
-      Betas_locs$MV_PLS[[i]][[1]] <- adjusted_results_MV_PLS$Beta_hat_locs[[1]]
-      Betas_locs$MV_PLS[[i]][[2]] <- adjusted_results_MV_PLS$Beta_hat_locs[[2]]
+      Betas_locs$MV_PLS[[i]] <- list()
+      for(l in 1:ncol(Beta_true_grid)) {
+        Betas_locs$MV_PLS[[i]][[l]] <- adjusted_results_MV_PLS$Beta_hat_locs[[l]]
+      }
     }
     
     if(mode_fun=="fPLS-R"){
       ## save betas at locations
-      Betas_locs$fPLS_off[[i]]<-list()
-      Betas_locs$fPLS_off[[i]][[1]] <- adjusted_results_fPLS_off$Beta_hat_locs[[1]]
-      Betas_locs$fPLS_off[[i]][[2]] <- adjusted_results_fPLS_off$Beta_hat_locs[[2]]
-      
-      Betas_locs$fPLS_gcv[[i]]<-list()
-      Betas_locs$fPLS_gcv[[i]][[1]] <- adjusted_results_fPLS_gcv$Beta_hat_locs[[1]]
-      Betas_locs$fPLS_gcv[[i]][[2]] <- adjusted_results_fPLS_gcv$Beta_hat_locs[[2]]
-      
+      Betas_locs$fPLS_off[[i]] <- list()
+      Betas_locs$fPLS_gcv[[i]] <- list()
+      for(l in 1:ncol(Beta_true_grid)) {
+        Betas_locs$fPLS_off[[i]][[l]] <- adjusted_results_fPLS_off$Beta_hat_locs[[l]]
+        Betas_locs$fPLS_gcv[[i]][[l]] <- adjusted_results_fPLS_gcv$Beta_hat_locs[[l]]
+      }
+
       ## save betas at nodes
       Betas$fPLS_off[[i]]<-list()
-      Betas$fPLS_off[[i]][[1]] <- adjusted_results_fPLS_off$Betas_loadings_evaluated_list[[1]]$Betas
-      Betas$fPLS_off[[i]][[2]] <- adjusted_results_fPLS_off$Betas_loadings_evaluated_list[[2]]$Betas
-      
       Betas$fPLS_gcv[[i]]<-list()
-      Betas$fPLS_gcv[[i]][[1]] <- adjusted_results_fPLS_gcv$Betas_loadings_evaluated_list[[1]]$Betas
-      Betas$fPLS_gcv[[i]][[2]] <- adjusted_results_fPLS_gcv$Betas_loadings_evaluated_list[[2]]$Betas
-      
+      for(l in 1:ncol(Beta_true_grid)) {
+        Betas$fPLS_off[[i]][[l]] <- adjusted_results_fPLS_off$Betas_loadings_evaluated_list[[l]]$Betas
+        Betas$fPLS_gcv[[i]][[l]] <- adjusted_results_fPLS_gcv$Betas_loadings_evaluated_list[[l]]$Betas
+      }
+
       ## save betas at grid
-      Betas_HR$fPLS_off[[i]]<-list()
-      Betas_HR$fPLS_off[[i]][[1]] <- adjusted_results_fPLS_off$Betas_loadings_evaluated_list[[1]]$Betas_HR
-      Betas_HR$fPLS_off[[i]][[2]] <- adjusted_results_fPLS_off$Betas_loadings_evaluated_list[[2]]$Betas_HR
-      
-      Betas_HR$fPLS_gcv[[i]]<-list()
-      Betas_HR$fPLS_gcv[[i]][[1]] <- adjusted_results_fPLS_gcv$Betas_loadings_evaluated_list[[1]]$Betas_HR
-      Betas_HR$fPLS_gcv[[i]][[2]] <- adjusted_results_fPLS_gcv$Betas_loadings_evaluated_list[[2]]$Betas_HR
+      Betas_HR$fPLS_off[[i]] <- list()
+      Betas_HR$fPLS_gcv[[i]] <- list()
+      for(l in 1:ncol(Beta_true_grid)) {
+        Betas_HR$fPLS_off[[i]][[l]] <- adjusted_results_fPLS_off$Betas_loadings_evaluated_list[[l]]$Betas_HR
+        Betas_HR$fPLS_gcv[[i]][[l]] <- adjusted_results_fPLS_gcv$Betas_loadings_evaluated_list[[l]]$Betas_HR
+      }
     }
     
     cat(paste("- Batch", i, "loaded\n"))

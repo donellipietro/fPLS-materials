@@ -298,16 +298,23 @@ if (RUN$qualitative_analysis) {
 
 ## plots
 if (RUN$qualitative_analysis) {
-  ## open a pdf where to save plots (qualitative analysis)
-  if (!RSTUDIO) {
-    pdf(file = paste(path_images, name_test, "_qualitative_betas.pdf", sep = ""), width = 10, height = 7)
+  if(mode == "PLS-R" || mode_fun == "fPLS-R"){
+    
+    for(beta_idx in 1:ncol(Beta_true_grid)){
+      
+      ## open a pdf where to save plots (qualitative analysis)
+      if (!RSTUDIO) {
+        pdf(file = paste(path_images, name_test, "_qualitative_beta_", beta_idx,".pdf", sep = ""), width = 10, height = 7)
+      }
+      
+      ## plot
+      source(paste("tests/", test_suite, "/templates/plot_qualitative_results_betas.R", sep = ""))
+      
+      ## close pdf (qualitative analysis)
+      dev.off()
+      
+    }
   }
-  ## plot
-  if( mode=="PLS-R" || mode_fun=="fPLS-R"){
-    source(paste("tests/", test_suite, "/templates/plot_qualitative_results_betas.R", sep = ""))
-  }
-  ## close pdf (qualitative analysis)
-  dev.off()
 }
 
 
