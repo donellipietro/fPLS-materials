@@ -31,5 +31,5 @@ cat(paste("\nTest selected:", name_test_main, "\n"))
 
 
 ## generation ----
-source(paste("tests/", args[1], "/utils/generate_options.R", sep = ""))
+source(paste("tests/fPLS/utils/generate_options.R", sep = ""))
 generate_options(name_test_main, path_options)

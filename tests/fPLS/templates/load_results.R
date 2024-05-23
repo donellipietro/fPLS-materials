@@ -155,7 +155,7 @@ if(RUN$qualitative_analysis) {
     )
     
     ## ajust loadings model_fPLS_off
-    model_fPLS_off <- evaluate_fPLS_at_locations(model_fPLS_gcv, n_comp, mean)
+    model_fPLS_off <- evaluate_fPLS_at_locations(model_fPLS_off, n_comp, mean)
     model_fPLS_off_X_space_directions_HR <- cbind(
       evaluate_field(grid_HR, model_fPLS_off$results$X_space_directions[,1], mesh),
       evaluate_field(grid_HR, model_fPLS_off$results$X_space_directions[,2], mesh),
@@ -239,8 +239,8 @@ if(RUN$qualitative_analysis) {
     
     ## save adjusted loadings at locations
     X_loadings_locs$MV_PLS[[i]] <- adjusted_results_MV_PLS$X_loadings_locs
-    X_loadings_locs$fPLS_off[[i]] <- adjusted_results_fPLS_off$loadings_locs
-    X_loadings_locs$fPLS_gcv[[i]] <- adjusted_results_fPLS_gcv$loadings_locs
+    X_loadings_locs$fPLS_off[[i]] <- adjusted_results_fPLS_off$X_loadings_locs
+    X_loadings_locs$fPLS_gcv[[i]] <- adjusted_results_fPLS_gcv$X_loadings_locs
     ## save adjusted loadings at nodes
     X_loadings$fPLS_off[[i]] <- adjusted_results_fPLS_off$X_loadings_evaluated_list$X_loadings
     X_loadings$fPLS_gcv[[i]] <- adjusted_results_fPLS_gcv$X_loadings_evaluated_list$X_loadings
