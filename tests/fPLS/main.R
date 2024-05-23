@@ -122,7 +122,7 @@ cat.section_title("Options")
 ## check arguments passed by terminal, set default if not present
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
-  RSTUDIO <- TRUE
+  RSTUDIO <- FALSE
   source(paste("tests/", test_suite, "/utils/generate_options.R", sep = ""))
   args[1] <- "test1"
   generate_options(args[1], path_queue)
@@ -294,6 +294,27 @@ if (RUN$qualitative_analysis) {
   dev.off()
 }
 
+
+## plots
+if (RUN$qualitative_analysis) {
+  if(mode == "PLS-R" || mode_fun == "fPLS-R"){
+    
+    for(beta_idx in 1:ncol(Beta_true_grid)){
+      
+      ## open a pdf where to save plots (qualitative analysis)
+      if (!RSTUDIO) {
+        pdf(file = paste(path_images, name_test, "_qualitative_beta_", beta_idx,".pdf", sep = ""), width = 10, height = 7)
+      }
+      
+      ## plot
+      source(paste("tests/", test_suite, "/templates/plot_qualitative_results_betas.R", sep = ""))
+      
+      ## close pdf (qualitative analysis)
+      dev.off()
+      
+    }
+  }
+}
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

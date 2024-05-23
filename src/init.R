@@ -21,7 +21,7 @@ mkdir(c(path_options))
 ## check arguments passed by terminal
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
-  args[1] <- "example"
+  args[1] <- "fPLS"
   args[2] <- "test1"
 }
 
