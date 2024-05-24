@@ -1,5 +1,5 @@
 # % %%%%%%%%%%%%%% %
-# % % Test: fPCA % %
+# % % Test: fPLS % %
 # % %%%%%%%%%%%%%% %
 
 rm(list = ls())
@@ -8,8 +8,11 @@ graphics.off()
 
 ## global variables ----
 
-test_suite <- "example"
-TEST_SUITE <- "fPCA"
+test_suite <- "fPLS"
+TEST_SUITE <- "fPLS"
+
+mode_MV <- "PLS-A"
+mode_fun <- "fPLS-A"
 
 
 ## prerequisite ----
@@ -53,8 +56,8 @@ file_log <- "log.txt"
 colors <- c(brewer.pal(3, "Greys")[3], brewer.pal(3, "Blues")[2:3])
 
 ## names and labels
-names_models <- c("MV_PCA", "fPCA_off", "fPCA_kcv")
-lables_models <- c("MV-PCA", "fPCA (no calibration)", "fPCA (kcv calibration)")
+names_models <- c("MV_PLS", "fPLS_off", "fPLS_gcv")
+lables_models <- c("MV-PLS", "fPLS (no calibration)", "fPLS (gcv calibration)")
 
 
 ## load data ----
@@ -68,7 +71,9 @@ if (length(args) == 0) {
 ## main test name
 name_main_test <- args[1]
 cat(paste("\nTest selected:", name_main_test, "\n"))
+path_results <- paste(path_results, mode_MV, "/", sep = "")
 path_results <- paste(path_results, name_main_test, "/", sep = "")
+path_images <- paste(path_images, mode_MV, "/", sep = "")
 path_images <- paste(path_images, name_main_test, "/", sep = "")
 mkdir(path_images)
 
@@ -79,7 +84,7 @@ generate_options(name_main_test, path_options)
 file_test_vect <- sort(list.files(path_options))
 
 ## room for solutions
-names_columns <- c("Group", "n_nodes", "n_locs", "n_stat_units", names_models)
+names_columns <- c("Group", "n_stat_units", "NSR_X_last_comp", "NSR_Y", names_models)
 empty_df <- data.frame(matrix(NaN, nrow = 0, ncol = length(names_columns)))
 colnames(empty_df) <- names_columns
 times <- empty_df
@@ -93,13 +98,13 @@ for (file_test in file_test_vect) {
   file_json <- paste(path_options, file_test, sep = "")
   parsed_json <- fromJSON(file_json)
   name_test <- parsed_json$test$name_test
-  n_nodes <- parsed_json$dimensions$n_nodes
-  n_locs <- parsed_json$dimensions$n_locs
   n_stat_units <- parsed_json$dimensions$n_stat_units
+  NSR_X_last_comp <- parsed_json$noise$NSR_X_last_comp
+  NSR_Y <- parsed_json$noise$NSR_Y
   n_reps <- parsed_json$dimensions$n_reps
-
+  
   cat(paste("\nTest ", name_test, ":\n", sep = ""))
-
+  
   ## load batches
   for (i in 1:n_reps) {
     ## laod batch and log if not present
@@ -114,56 +119,50 @@ for (file_test in file_test_vect) {
       }
     )
     sink()
-
+    
     ## times
     times <- add_results(
       times,
       c(
-        list(n_nodes = n_nodes, n_locs = n_locs, n_stat_units = n_stat_units),
+        list(n_stat_units = n_stat_units, NSR_X_last_comp = NSR_X_last_comp, NSR_Y = NSR_Y),
         extract_new_results(results_evaluation, names_models, "execution_time")
       ),
       names_columns
     )
-
+    
     ## rmse
-    for (name in c("reconstruction_locs", "loadings_locs", "scores")) {
+    names <- c("Y_reconstruction", "X_reconstruction_locs")
+    if(mode_MV == "PLS-R") {
+      names <- c(names, "Beta_locs")
+    }
+    for (name in names) {
       rmses[[name]] <- add_results(
         rmses[[name]],
         c(
-          list(n_nodes = n_nodes, n_locs = n_locs, n_stat_units = n_stat_units),
+          list(n_stat_units = n_stat_units, NSR_X_last_comp = NSR_X_last_comp, NSR_Y = NSR_Y),
           extract_new_results(results_evaluation, names_models, c("rmse", name))
         ),
         names_columns
       )
     }
-
-    ## irmse
-    for (name in c("reconstruction", "loadings")) {
-      irmses[[name]] <- add_results(
-        irmses[[name]],
+    
+    names <- c("Y_space_directions", "X_space_directions_locs",
+               "Y_latent_scores", "X_latent_scores",
+               "Y_loadings", "X_loadings_locs")
+    for (name in names) {
+      rmses[[name]] <- add_results(
+        rmses[[name]],
         c(
-          list(n_nodes = n_nodes, n_locs = n_locs, n_stat_units = n_stat_units),
-          extract_new_results(results_evaluation, names_models, c("irmse", name))
+          list(n_stat_units = n_stat_units, NSR_X_last_comp = NSR_X_last_comp, NSR_Y = NSR_Y),
+          extract_new_results(results_evaluation, names_models, c("rmse", name))
         ),
         names_columns
       )
     }
-
-    ## angles
-    for (name in c("orthogonality_m", "orthogonality_f")) {
-      angles[[name]] <- add_results(
-        angles[[name]],
-        c(
-          list(n_nodes = n_nodes, n_locs = n_locs, n_stat_units = n_stat_units),
-          extract_new_results(results_evaluation, names_models, c("angles", name))
-        ),
-        names_columns
-      )
-    }
-
+    
     cat(paste("- Batch", i, "loaded\n"))
   }
-
+  
   ## remove option file
   file.remove(file_json)
 }
@@ -172,13 +171,13 @@ for (file_test in file_test_vect) {
 ## analysis ----
 
 ## names
-name_aggregation_option_vect <- c("n_nodes", "n_stat_units", "n_locs")
-name_group_vect <- c("K", "N", "S")
+name_aggregation_option_vect <- c("n_stat_units", "NSR_X_last_comp", "NSR_Y")
+name_group_vect <- c("N", "NSR_X_lc", "NSR_Y")
 
 ### time complexity ----
 
 ## open a pdf where to save the plots
-pdf(paste(path_images, "time_complexity.pdf", sep = ""), width = 15, height = 15)
+pdf(paste(path_images, "time_complexity.pdf", sep = ""), width = 20, height = 20)
 
 ## data and titles
 data_plot <- times
@@ -186,9 +185,8 @@ values_name <- "Time [seconds]"
 title_vect <- paste(
   "Execution times w.r.t the",
   c(
-    "number of nodes (K)",
     "number of statistical units (N)",
-    "number of locations (S)"
+    "NSR X last component", "NSR Y last component"
   )
 )
 
@@ -199,16 +197,16 @@ for (name_ao in name_aggregation_option_vect) {
 }
 
 
-for (i in 1:length(name_aggregation_option_vect)) {
+for (i in c(1)) {
   boxplot_list <- list()
   plot_list <- list()
   plot_loglog_list <- list()
   plot_loglog_normalized_list <- list()
-
+  
   name_aggregation_option <- name_aggregation_option_vect[i]
   group_name <- name_group_vect[i]
   title <- title_vect[i]
-
+  
   options_grid_selected <- options_grid
   options_grid_selected[[name_aggregation_option]] <- NULL
   names_options_selected <- names(options_grid_selected)
@@ -216,13 +214,13 @@ for (i in 1:length(name_aggregation_option_vect)) {
   mg <- meshgrid(options_grid_selected[[1]], options_grid_selected[[2]])
   combinations_options <- data.frame(as.vector(mg[[1]]), as.vector(mg[[2]]))
   colnames(combinations_options) <- names_options_selected
-
+  
   limits <- c(0, max(data_plot[, names_models]))
   range <- range(times[, names_models])
-
+  
   labels_rows <- paste(labels_options_selected[1], "=", options_grid_selected[[1]])
   labels_cols <- paste(labels_options_selected[2], "=", options_grid_selected[[2]])
-
+  
   for (j in 1:nrow(combinations_options)) {
     ## data preparation
     data_plot_trimmed <- data_plot[
@@ -233,7 +231,7 @@ for (i in 1:length(name_aggregation_option_vect)) {
     colnames(data_plot_trimmed) <- c("Group", names_models)
     indexes <- which(!is.nan(colSums(data_plot_trimmed[, names_models])))
     data_plot_aggregated <- aggregate(. ~ Group, data = data_plot_trimmed, FUN = median)
-
+    
     ## plots
     boxplot_list[[j]] <- plot.grouped_boxplots(
       data_plot_trimmed[, c("Group", names(indexes))],
@@ -306,105 +304,142 @@ dev.off()
 
 
 ## open a pdf where to save the plots
-pdf(paste(path_images, "overall_quantitative_results.pdf", sep = ""), width = 15, height = 15)
+pdf(paste(path_images, "overall_quantitative_results.pdf", sep = ""), width = 20, height = 20)
 
-## reconstruction RMSE at locations
-data_plot <- rmses[["reconstruction_locs"]]
+## Y reconstruction RMSE at locations
+data_plot <- rmses[["Y_reconstruction"]][rmses[["Y_reconstruction"]]$Group == "4", ]
 title_vect <- paste(
-  "Reconstruction RMSE at locations w.r.t the",
+  "Y reconstruction RMSE at locations w.r.t the",
   c(
-    "number of nodes (K)",
     "number of statistical units (N)",
-    "number of locations (S)"
+    "NSR X last component", "NSR Y last component"
   )
 )
 limits <- NULL
 source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
 
-## reconstruction IRMSE
-data_plot <- irmses[["reconstruction"]]
+## X reconstruction RMSE at locations
+data_plot <- rmses[["X_reconstruction_locs"]][rmses[["X_reconstruction_locs"]]$Group == "4", ]
 title_vect <- paste(
-  "Reconstruction IRMSE w.r.t the",
+  "X reconstruction RMSE at locations w.r.t the",
   c(
-    "number of nodes (K)",
     "number of statistical units (N)",
-    "number of locations (S)"
+    "NSR X last component", "NSR Y last component"
   )
 )
 limits <- NULL
 source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
 
-## loadings
-name_vect <- c("1", "2", "3")
-for (k in 1:3) {
-  data_plot <- rmses[["loadings_locs"]][rmses[["loadings_locs"]]$Group == k, ]
+if(mode_MV == "PLS-R") {
+  ## Beta RMSE at locations
+  data_plot <- rmses[["Beta_locs"]][rmses[["Beta_locs"]]$Group == "4", ]
   title_vect <- paste(
-    "Loadings at locations RMSE component", name_vect[k], "w.r.t the",
+    "Beta RMSE at locations w.r.t the",
     c(
-      "number of nodes (K)",
       "number of statistical units (N)",
-      "number of locations (S)"
+      "NSR X last component", "NSR Y last component"
     )
   )
   limits <- NULL
   source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
 }
-for (k in 1:3) {
-  data_plot <- irmses[["loadings"]][irmses[["loadings"]]$Group == k, ]
-  title_vect <- paste(
-    "Loadings IRMSE component", name_vect[k], "w.r.t the",
-    c(
-      "number of nodes (K)",
-      "number of statistical units (N)",
-      "number of locations (S)"
-    )
-  )
-  limits <- NULL
-  source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
-}
-for (k in 1:3) {
-  data_plot <- rmses[["scores"]][rmses[["scores"]]$Group == k, ]
-  title_vect <- paste(
-    "Scores RMSE component", name_vect[k], "w.r.t the",
-    c(
-      "number of nodes (K)",
-      "number of statistical units (N)",
-      "number of locations (S)"
-    )
-  )
-  limits <- NULL
-  source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
-}
-
-
-## orthogonality check
-name_vect <- c("1-2", "1-3", "2-3")
-for (k in 1:3) {
-  data_plot <- angles[["orthogonality_m"]][angles[["orthogonality_m"]]$Group == k, ]
-  title_vect <- paste(
-    "Orthogonality check (l2) pair", name_vect[k], "w.r.t the",
-    c(
-      "number of nodes (K)",
-      "number of statistical units (N)",
-      "number of locations (S)"
-    )
-  )
-  limits <- c(80, 100)
-  source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
-}
-for (k in 1:3) {
-  data_plot <- angles[["orthogonality_f"]][angles[["orthogonality_f"]]$Group == k, ]
-  title_vect <- paste(
-    "Orthogonality check (L2) pair", name_vect[k], "w.r.t the",
-    c(
-      "number of nodes (K)",
-      "number of statistical units (N)",
-      "number of locations (S)"
-    )
-  )
-  limits <- c(80, 100)
-  source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
-}
-
 
 dev.off()
+
+### X quantitative results ----
+
+## open a pdf where to save the plots
+pdf(paste(path_images, "X_quantitative_results.pdf", sep = ""), width = 20, height = 20)
+
+name_vect <- c("1", "2", "3", "4")
+for (k in 1:4) {
+  data_plot <- rmses[["X_space_directions_locs"]][rmses[["X_space_directions_locs"]]$Group == k, ]
+  title_vect <- paste(
+    "X space directions at locations RMSE component", name_vect[k], "w.r.t the",
+    c(
+      "number of nodes (K)",
+      "number of statistical units (N)",
+      "number of locations (S)"
+    )
+  )
+  limits <- NULL
+  source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
+}
+for (k in 1:4) {
+  data_plot <- rmses[["X_latent_scores"]][rmses[["X_latent_scores"]]$Group == k, ]
+  title_vect <- paste(
+    "X latent scores RMSE component", name_vect[k], "w.r.t the",
+    c(
+      "number of nodes (K)",
+      "number of statistical units (N)",
+      "number of locations (S)"
+    )
+  )
+  limits <- NULL
+  source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
+}
+for (k in 1:4) {
+  data_plot <- rmses[["X_loadings_locs"]][rmses[["X_loadings_locs"]]$Group == k, ]
+  title_vect <- paste(
+    "X loadings at locations RMSE component", name_vect[k], "w.r.t the",
+    c(
+      "number of nodes (K)",
+      "number of statistical units (N)",
+      "number of locations (S)"
+    )
+  )
+  limits <- NULL
+  source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
+}
+
+dev.off()
+
+
+### Y quantitative results ----
+
+## open a pdf where to save the plots
+pdf(paste(path_images, "Y_quantitative_results.pdf", sep = ""), width = 20, height = 20)
+
+name_vect <- c("1", "2", "3", "4")
+for (k in 1:4) {
+  data_plot <- rmses[["Y_space_directions"]][rmses[["Y_space_directions"]]$Group == k, ]
+  title_vect <- paste(
+    "Y space directions RMSE component", name_vect[k], "w.r.t the",
+    c(
+      "number of nodes (K)",
+      "number of statistical units (N)",
+      "number of locations (S)"
+    )
+  )
+  limits <- NULL
+  source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
+}
+for (k in 1:4) {
+  data_plot <- rmses[["Y_latent_scores"]][rmses[["Y_latent_scores"]]$Group == k, ]
+  title_vect <- paste(
+    "Y latent scores RMSE component", name_vect[k], "w.r.t the",
+    c(
+      "number of nodes (K)",
+      "number of statistical units (N)",
+      "number of locations (S)"
+    )
+  )
+  limits <- NULL
+  source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
+}
+for (k in 1:4) {
+  data_plot <- rmses[["Y_loadings"]][rmses[["Y_loadings"]]$Group == k, ]
+  title_vect <- paste(
+    "Y loadings at locations RMSE component", name_vect[k], "w.r.t the",
+    c(
+      "number of nodes (K)",
+      "number of statistical units (N)",
+      "number of locations (S)"
+    )
+  )
+  limits <- NULL
+  source(paste("tests/", test_suite, "/templates/plot_overall.R", sep = ""))
+}
+
+dev.off()
+

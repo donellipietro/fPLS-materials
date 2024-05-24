@@ -27,7 +27,7 @@ adjust_norms <- function(X_space_directions_locs,
     X_latent_scores[, h] <- X_latent_scores[, h] / norms_locs[h]
     X_loadings_locs[, h] <- X_loadings_locs[, h] * norms_locs[h]
     if(mode == "PLS-R" || mode == "fPLS-R") {
-      Y_loadings[, i] <- Y_loadings[, i] * norms_locs[h]
+      Y_loadings[, h] <- Y_loadings[, h] * norms_locs[h]
     }
   }
   
@@ -83,7 +83,7 @@ adjust_results <- function(Y_space_directions, Y_space_directions_true,
       Y_space_directions[, h] <- - Y_space_directions[, h]
       Y_latent_scores[, h] <- - Y_latent_scores[, h]
       if(!(mode == "PLS-R" || mode == "fPLS-R")) {
-        Y_loadings[, i] <- - Y_loadings[, i]
+        Y_loadings[, h] <- - Y_loadings[, h]
       }
     }
     ## X space
@@ -92,7 +92,7 @@ adjust_results <- function(Y_space_directions, Y_space_directions_true,
       X_latent_scores[, h] <- - X_latent_scores[, h]
       X_loadings_locs[, h] <- - X_loadings_locs[, h]
       if(mode == "PLS-R" || mode == "fPLS-R") {
-        Y_loadings[, i] <- - Y_loadings[, i]
+        Y_loadings[, h] <- - Y_loadings[, h]
       }
       if (!is.null(X_space_directions_evaluated_list)) {
         for (i in 1:length(X_space_directions_evaluated_list)) {
@@ -135,8 +135,10 @@ evaluate_fPLS_at_locations <- function(model, n_comp, mean) {
   }
   # Beta
   model$results$Beta_hat_locs <- list()
-  for(h in 1:n_comp) {
-    model$results$Beta_hat_locs[[h]] <- model$evaluate(model$results$Beta_hat[[h]])
+  if(model$MODE == "fPLS-R") {
+    for(h in 1:n_comp) {
+      model$results$Beta_hat_locs[[h]] <- model$evaluate(model$results$Beta_hat[[h]])
+    }
   }
   # directions & loadings
   model$results$X_space_directions_locs <- model$evaluate(model$results$X_space_directions)

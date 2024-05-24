@@ -106,7 +106,7 @@ generate_2D_data <- function(
   if(mode == "PLS-R"){
     sigma_noise_y <- sqrt(NSR_Y) * as.numeric(sqrt(Y_loadings_true^2 %*% sd_X_latent_scores^2))
   }
-  if(mode == "PLS-A"){
+  if(mode == "PLS-A" || mode == "PLS-SB"){
     sigma_noise_y <- sqrt(NSR_Y) * as.numeric(sqrt(Y_loadings_true^2 %*% sd_Y_latent_scores^2))
   }
   
@@ -149,7 +149,7 @@ generate_2D_data <- function(
   if(mode == "PLS-R"){
     Y_c_true <- X_latent_scores_true %*% t(Y_loadings_true)
   }
-  if(mode == "PLS-A"){
+  if(mode == "PLS-A" || mode == "PLS-SB"){
     Y_c_true <- Y_latent_scores_true %*% t(Y_loadings_true)
   }
   Y_mean_true <- 0 # t(c(2, 5)[1:L])

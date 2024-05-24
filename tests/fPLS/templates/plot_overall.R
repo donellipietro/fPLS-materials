@@ -5,7 +5,7 @@ for(name_ao in name_aggregation_option_vect) {
 }
 
 ## plots
-for(i in c(2)) {
+for(i in c(1)) {
   
   boxplot_list <- list()
   plot_list <- list()

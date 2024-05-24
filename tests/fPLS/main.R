@@ -77,7 +77,7 @@ mkdir(c(path_logs))
 
 ## force testing even if a fit is already available
 FORCE_FIT <- FALSE
-FORCE_EVALUATE <- FALSE
+FORCE_EVALUATE <- TRUE
 
 ## execution flow modifiers
 RUN <- list()
@@ -122,7 +122,7 @@ cat.section_title("Options")
 ## check arguments passed by terminal, set default if not present
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
-  RSTUDIO <- FALSE
+  RSTUDIO <- TRUE
   source(paste("tests/", test_suite, "/utils/generate_options.R", sep = ""))
   args[1] <- "test1"
   generate_options(args[1], path_queue)
@@ -158,12 +158,16 @@ if(!RSTUDIO){
 cat.json(parsed_json)
 
 ## create results directory
+path_results <- paste(path_results, mode_MV, "/", sep = "")
+mkdir(path_results)
 path_results <- paste(path_results, name_main_test, "/", sep = "")
 mkdir(path_results)
 path_results <- paste(path_results, name_test, "/", sep = "")
 mkdir(path_results)
 
 ## create images directory
+path_images <- paste(path_images, mode_MV, "/", sep = "")
+mkdir(path_images)
 path_images <- paste(path_images, name_main_test, "/", sep = "")
 mkdir(path_images)
 path_images <- paste(path_images, "single_tests/", sep = "")
@@ -249,9 +253,7 @@ cat.subsection_title("Quantitative analysis")
 
 if (RUN$quantitative_analysis) {
   ## open a pdf where to save plots (quantitative analysis)
-  if (!RSTUDIO) {
-    pdf(file = paste(path_images, name_test, "_quantitative.pdf", sep = ""))
-  }
+  pdf(file = paste(path_images, name_test, "_quantitative.pdf", sep = ""))
   
   ## plots
   source(paste("tests/", test_suite, "/templates/plot_quantitative_results.R", sep = ""))
@@ -267,9 +269,7 @@ cat.subsection_title("Qualitative analysis")
 ## plots
 if (RUN$qualitative_analysis) {
   ## open a pdf where to save plots (qualitative analysis)
-  if (!RSTUDIO) {
-    pdf(file = paste(path_images, name_test, "_qualitative_X_space_directions.pdf", sep = ""), width = 10, height = 7)
-  }
+  pdf(file = paste(path_images, name_test, "_qualitative_X_space_directions.pdf", sep = ""), width = 10, height = 7)
   
   ## plot
   labels_rows <- c("w1", "w2", "w3", "w4")
@@ -282,15 +282,13 @@ if (RUN$qualitative_analysis) {
 ## plots
 if (RUN$qualitative_analysis) {
   ## open a pdf where to save plots (qualitative analysis)
-  if (!RSTUDIO) {
-    pdf(file = paste(path_images, name_test, "_qualitative_X_loadings.pdf", sep = ""), width = 10, height = 7)
-  }
+  pdf(file = paste(path_images, name_test, "_qualitative_X_loadings.pdf", sep = ""), width = 10, height = 7)
   
   ## plot
   labels_rows <- c("r1", "r2", "r3", "r4")
   source(paste("tests/", test_suite, "/templates/plot_qualitative_results_X_loadings.R", sep = ""))
   
-
+  
   ## close pdf (qualitative analysis)
   dev.off()
 }
@@ -303,9 +301,7 @@ if (RUN$qualitative_analysis) {
     for(beta_idx in 1:ncol(Beta_true_grid)){
       
       ## open a pdf where to save plots (qualitative analysis)
-      if (!RSTUDIO) {
-        pdf(file = paste(path_images, name_test, "_qualitative_beta_", beta_idx,".pdf", sep = ""), width = 10, height = 7)
-      }
+      pdf(file = paste(path_images, name_test, "_qualitative_beta_", beta_idx,".pdf", sep = ""), width = 10, height = 7)
       
       ## plot
       source(paste("tests/", test_suite, "/templates/plot_qualitative_results_betas.R", sep = ""))

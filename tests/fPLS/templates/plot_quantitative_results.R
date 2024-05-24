@@ -14,11 +14,17 @@ plot <- plot.grouped_boxplots(
 print(plot)
 
 ## RMSE
-names <- c("Y_reconstruction", "X_reconstruction_locs", "Beta_locs",
+name_beta <- c()
+title_beta <- c()
+if(mode_MV == "PLS-R" || mode_fun == "fPLS-R") {
+  name_beta <- "Beta_locs"
+  title_beta <- "Beta_locs"
+}
+names <- c("Y_reconstruction", "X_reconstruction_locs", name_beta,
            "Y_space_directions", "X_space_directions_locs",
            "Y_latent_scores", "X_latent_scores",
            "Y_loadings", "X_loadings_locs")
-titles <- c("Y_reconstruction", "X_reconstruction_locs", "Beta_locs",
+titles <- c("Y_reconstruction", "X_reconstruction_locs", title_beta,
             "Y_space_directions", "X_space_directions_locs",
             "Y_latent_scores", "X_latent_scores",
             "Y_loadings", "X_loadings_locs")
