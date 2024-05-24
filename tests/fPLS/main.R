@@ -77,7 +77,7 @@ mkdir(c(path_logs))
 
 ## force testing even if a fit is already available
 FORCE_FIT <- FALSE
-FORCE_EVALUATE <- TRUE
+FORCE_EVALUATE <- FALSE
 
 ## execution flow modifiers
 RUN <- list()

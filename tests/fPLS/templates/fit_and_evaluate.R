@@ -75,7 +75,7 @@ if (file.exists(file_model) && !FORCE_FIT) {
     center = ifelse(mean, centering_selected, list(FALSE))[[1]],
     mode = mode_fun
   )
-  model_fPLS_off$fit(hyperparameters(1e-7), n_comp = n_comp)
+  model_fPLS_off$fit(hyperparameters(lambda_fixed), n_comp = n_comp)
   end.time <- Sys.time()
   cat(paste("finished after", end.time - start.time, attr(end.time - start.time, "units"), "\n"))
   
